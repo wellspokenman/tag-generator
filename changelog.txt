@@ -1,5 +1,6 @@
 v0.4
-- Kodi support (14 and 15).
+- Kodi support (14 and 15)......
+-----------
 - IMDB lists now in RSS format. 
 - removed trakt (other addons do this now)
 - removed music

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-    <category label=Settings>
+    <category label="Settings">
         <setting label="Run as a service" type="bool" id="32011" default="true"/>
         <setting label="Refresh Interval (hours)" type="number" visible="eq(-1,true)" id="32012" default="4"/>
               <setting type="sep"/>
@@ -11,15 +11,15 @@
     <category label="IMDB">
         <setting id="32020" type="bool" label="Use IMDB" default="true"/>
         <setting label="Number of URLs" visible="eq(-1,true)" default="1" type="enum"  id="32099" values="1|2|3|4|5"/>
-        <setting label="IMDB Watchlist RSS URL" type="text" visible="eq(-2,true)" id="32050" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
+        <setting label="IMDB Watchlist URL (rss)" type="text" visible="eq(-2,true)" id="32050" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="Set this tag in Kodi:" type="text" visible="eq(-3,true)" id="32080" default="Mary J"/>
-        <setting label="IMDB Watchlist RSS URL" type="text" visible="gt(-3,0) + eq(-4,true)" id="32051" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
+        <setting label="IMDB Watchlist URL (rss)" type="text" visible="gt(-3,0) + eq(-4,true)" id="32051" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="Set this tag in Kodi:" type="text" visible="gt(-4,0) + eq(-5,true)" id="32081" default="Rottencrotch"/>
-        <setting label="IMDB Watchlist RSS URL" type="text" visible="gt(-5,1) + eq(-6,true)" id="32052" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
+        <setting label="IMDB Watchlist URL (rss)" type="text" visible="gt(-5,1) + eq(-6,true)" id="32052" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="Set this tag in Kodi:" type="text" visible="gt(-6,1) + eq(-7,true)" id="32082" default="Purty"/>
-        <setting label="IMDB Watchlist RSS URL" type="text" visible="gt(-7,2) + eq(-8,true)" id="32053" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
+        <setting label="IMDB Watchlist URL (rss)" type="text" visible="gt(-7,2) + eq(-8,true)" id="32053" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="Set this tag in Kodi:" type="text" visible="gt(-8,2) + eq(-9,true)" id="32083" default="Pink"/>
-        <setting label="IMDB Watchlist RSS URL" type="text" visible="gt(-9,3) + eq(-10,true)" id="32054" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
+        <setting label="IMDB Watchlist URL (rss)" type="text" visible="gt(-9,3) + eq(-10,true)" id="32054" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="Set this tag in Kodi:" type="text" visible="gt(-10,3) + eq(-11,true)" id="32084" default="Panties"/>
     </category>
    <!-- <category label="Trakt">

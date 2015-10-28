@@ -5,15 +5,15 @@
        provider-name="wellspokenman">
   <requires>
     <import addon="xbmc.python" version="2.19.0"/>
-	<import addon="script.module.simplejson" version="3.3.0"/>
+    <import addon="script.module.simplejson" version="3.3.0"/>      
   </requires>
-  <extension point="xbmc.service"
+  <extension point="xbmc.python.script"
              library="main.py" start="login">  
   </extension>
   <extension point="xbmc.addon.metadata">
     <platform>all</platform>
-    <summary lang="en">IMDB and Stand-up Tag Generator</summary>
-    <description lang="en">A simple script to help you create Smart Playlists from IMDB Watchlists by tagging local movies found in specified external watchlists. Also creates a stand-up comedy tag based on Wikipedia comedians, as there is no genre for stand-up. Specify your IMDB watchlists then choose your desired XBMC tag for each list. Runs as a service at login and thereafter in the background at the specified interval. </description>
+    <summary lang="en">IMDB, Trakt and Stand-up Tag Generator</summary>
+    <description lang="en">A simple script to help you create Smart Playlists from IMDB and Trakt Watchlists by tagging local movies found in specified watchlists. Also creates a stand-up comedy tag based on Wikipedia comedians, as there is no genre for stand-up. Specify your Trakt logon info and IMDB watchlists then choose your desired XBMC tag for each list. For custom Trakt lists, the name of each list is used as the tag. Runs as a service in the background at the specified interval, and also allows for manual creation.</description>
 	<language></language>
 	<license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
 	<forum>http://forum.kodi.tv/showthread.php?tid=140494</forum>

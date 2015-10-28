@@ -12,8 +12,8 @@ except ImportError:
 
 if len(sys.argv) != 2:
     xbmc.sleep(1000)
-    print "TAG-GEN: Starting as a service."
-__settings__ = xbmcaddon.Addon(id="script.tag-generator")
+    xbmc.log(msg="TAG-GEN: Starting as a service.",level=xbmc.LOGNOTICE)
+__settings__ = xbmcaddon.Addon()
 c_refresh = __settings__.getSetting("32012")
 c_runasservice = __settings__.getSetting("32011")
 sleeptime = int(c_refresh)*3600000
@@ -22,6 +22,17 @@ micronap = 60000
 ###################################################################
 ############################ FUNCTIONS ############################
 ###################################################################
+#test for interwebs
+def internet_test(url):
+    try:
+        response=urllib2.urlopen(url,timeout=1)
+        return True
+    except urllib2.URLError as err: pass
+    if len(sys.argv) == 2:
+        dialog = xbmcgui.Dialog()
+        ok = dialog.ok("Error",url + " unreachable. Check network and retry.")
+    xbmc.log(msg= "TAG-GEN: " + url + " unreachable. Check network and retry.",level=xbmc.LOGNOTICE)
+    sys.exit(url + " unreachable. Check network and retry.")
 
 #stops the music
 def stopmusic():
@@ -35,7 +46,7 @@ def ifcancel():
         if (pDialog.iscanceled()):
             if "true" in c_bgmusic:
                 stopmusic()
-            print "TAG-GEN: Cancel received from XBMC dialog, exiting."
+            xbmc.log(msg= "TAG-GEN: Cancel received from XBMC dialog, exiting.",level=xbmc.LOGNOTICE)
             sys.exit("Operation cancelled.")
 
 #starts the music
@@ -54,7 +65,7 @@ def playmusic():
 #def to make a debug log
 def debuglog(string):
     if "true" in c_debug:
-        print string
+        xbmc.log(msg=string,level=xbmc.LOGNOTICE)
 
 #make lists sorted and unique
 def unique(it):
@@ -215,6 +226,7 @@ def scrapeimdb(imdburl, scrapecount):
 
 # Scrapes IMDB given a URL and a scrape count (counter for how many times it has run)
 def scrapeimdbrss(imdburl, scrapecount):
+    internet_test("http://rss.imdb.com")
     if len(sys.argv) == 2:
         pDialog.update (0,"Scraping IMDB for IDs..."," ", " ")
     ifcancel()
@@ -225,8 +237,8 @@ def scrapeimdbrss(imdburl, scrapecount):
     imdbpage=infile.read()
     infile.close()
     global imdbuser
-    imdbuser = re.findall(r'<link>http://www.imdb.com/user/(ur[0-9]{8})/watchlist</link>', imdbpage)
-    imdblist = re.findall(r'<guid>http://www.imdb.com/title/(tt[0-9]{7})/</guid>', imdbpage)
+    imdbuser = re.findall(r'<link>.+/(ur[0-9]{8})/.+/link>', imdbpage)
+    imdblist = re.findall(r'<guid>.+(tt[0-9]{7})/</guid>', imdbpage)
     imdblist = sorted(unique(imdblist))
     debuglog("TAG-GEN: Found these IMDB tags on " + str(imdbuser) + "'s watchlist: " + str(imdburl) + ": " + str(imdblist))
     return imdblist
@@ -261,6 +273,7 @@ def writeimdbtags(imdblist, Medialist, newimdbtag):
 
 # Scrapes Wikipedia URLs for comedian names given a single url
 def scrapewiki():
+    internet_test("http://en.wikipedia.org")
     if len(sys.argv) == 2:
         pDialog.update (0,"Scraping Wikipedia for comedian names..."," "," ")
     comiclist = []
@@ -322,9 +335,9 @@ wikiurllist=["http://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
 monitor = xbmc.Monitor()
 while not monitor.abortRequested():
     if (c_runasservice != "true") and len(sys.argv) != 2:
-        print "TAG-GEN: Manual run not detected and runasservice not selected, exiting."
+        xbmc.log(msg= "TAG-GEN: Manual run not detected and runasservice not selected, exiting.",level=xbmc.LOGNOTICE)
         sys.exit("Manual run not detected, runasservice not selected, exiting.")
-    print "TAG-GEN: Starting scraped tag generation."
+    xbmc.log(msg= "TAG-GEN: Starting scraped tag generation.",level=xbmc.LOGNOTICE)
     URLID=32050
     TAGID=32080
     comiccount = 0
@@ -382,22 +395,22 @@ while not monitor.abortRequested():
                         playmusic()
                     pDialog = xbmcgui.DialogProgress()
                     pDialog.create("Tag Generator", "Alrighty then...")
-                    print "TAG-GEN: Wiping all your XBMC tags..."
+                    xbmc.log(msg= "TAG-GEN: Wiping all your XBMC tags...",level=xbmc.LOGNOTICE)
                     wipedcount = wipealltags()
                 else:
                     stopmusic()
-                    print "TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting."
+                    xbmc.log(msg= "TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.",level=xbmc.LOGNOTICE)
                     sys.exit("TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.")
             else:
                 stopmusic()
-                print "TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting."
+                xbmc.log(msg= "TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.",level=xbmc.LOGNOTICE)
                 sys.exit("TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.")
         elif "trakt" in sys.argv[1]:
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", "Initialising...")
             if "true" in c_bgmusic:
                 playmusic()
-            print "TAG-GEN: Starting Trakt writing."
+            xbmc.log(msg= "TAG-GEN: Starting Trakt writing.",level=xbmc.LOGNOTICE)
             Medialist = getxbmcdb()
             if "true" in c_usetrakt:
                 traktlist = gettrakt(c_traktuser, c_traktpass)
@@ -411,7 +424,7 @@ while not monitor.abortRequested():
                         traktlist = readtraktlists(c_traktuser, c_traktpass, slug)
                         moviecount = writetrakttags(traktlist, Medialist, name[1:-1])
                 else:
-                    print "TAG-GEN: No custom Trakt lists found."
+                    xbmc.log(msg= "TAG-GEN: No custom Trakt lists found.",level=xbmc.LOGNOTICE)
             stopmusic()
             sys.exit("TAG-GEN: Manual Trakt arg received, exiting after execution.")
         elif "standup" in sys.argv[1]:
@@ -419,7 +432,7 @@ while not monitor.abortRequested():
             ret = pDialog.create("Tag Generator", "Initialising...")
             if "true" in c_bgmusic:
                 playmusic()
-            print "TAG-GEN: Starting stand-up tag writing."
+            xbmc.log(msg= "TAG-GEN: Starting stand-up tag writing.",level=xbmc.LOGNOTICE)
             Medialist = getxbmcdb()
             newwikitag = c_standuptag
             comedians = scrapewiki()
@@ -431,7 +444,7 @@ while not monitor.abortRequested():
             ret = pDialog.create("Tag Generator", "Initialising...")
             if "true" in c_bgmusic:
                 playmusic()
-            print "TAG-GEN: Starting IMDB tag writing."
+            xbmc.log(msg= "TAG-GEN: Starting IMDB tag writing.",level=xbmc.LOGNOTICE)
             Medialist = getxbmcdb()
             scrapecount = 0
             for imdburl in imdburllist:
@@ -442,14 +455,14 @@ while not monitor.abortRequested():
             stopmusic()
             sys.exit("TAG-GEN: Manual IMDB arg received, exiting after execution.")
         else:
-            print "TAG-GEN: No valid arguments supplied."
+            xbmc.log(msg= "TAG-GEN: No valid arguments supplied.",level=xbmc.LOGNOTICE)
 
 #### Read the local XBMC DB ####
     Medialist = getxbmcdb()
 
 #### IMDB tag writing ####
     if ("true" in c_useimdb) and ("false" in wipeout):
-        print "TAG-GEN: Starting IMDB tag writing."
+        xbmc.log(msg= "TAG-GEN: Starting IMDB tag writing.",level=xbmc.LOGNOTICE)
         scrapecount = 0
         moviecount = 0
         for imdburl in imdburllist:
@@ -458,17 +471,17 @@ while not monitor.abortRequested():
             moviecount = moviecount + writeimdbtags(imdblist, Medialist, newimdbtag)
             scrapecount = scrapecount + 1
     else:
-        print "TAG-GEN: Skipping IMDB tag writing."
+        xbmc.log(msg= "TAG-GEN: Skipping IMDB tag writing.",level=xbmc.LOGNOTICE)
         moviecount = 0
 
 #### Stand-up Comedy tag writing ####
     if ("true" in c_standup) and ("false" in wipeout):
         newwikitag = c_standuptag
-        print "TAG-GEN: Starting stand-up tag writing."
+        xbmc.log(msg= "TAG-GEN: Starting stand-up tag writing.",level=xbmc.LOGNOTICE)
         comedians = scrapewiki()
         comiccount = writestanduptags(comedians, Medialist, newwikitag)
     else:
-        print "TAG-GEN: Skipping standup tag writing."
+        xbmc.log(msg= "TAG-GEN: Skipping standup tag writing.",level=xbmc.LOGNOTICE)
 
 #### Trakt movies tag writing ####
     if ("true" in c_usetrakt or c_usetraktlists) and ("false" in wipeout):
@@ -484,16 +497,16 @@ while not monitor.abortRequested():
                     traktlist = readtraktlists(c_traktuser, c_traktpass, slug)
                     moviecount = moviecount + writetrakttags(traktlist, Medialist, name[1:-1])
             else:
-                print "TAG-GEN: No custom Trakt lists found."
+                xbmc.log(msg= "TAG-GEN: No custom Trakt lists found.",level=xbmc.LOGNOTICE)
     else:
-        print "TAG-GEN: Skipping Trakt tag writing."
+        xbmc.log(msg= "TAG-GEN: Skipping Trakt tag writing.",level=xbmc.LOGNOTICE)
 
     if "true" in manual:
         if "true" in c_bgmusic:
             stopmusic()
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", "Tagging complete for "+str(moviecount)+" movies and " + str(comiccount)+" stand-up features.")
-        print "TAG-GEN: Manual arg received, exiting after single execution."
+        xbmc.log(msg= "TAG-GEN: Manual arg received, exiting after single execution.",level=xbmc.LOGNOTICE)
         sys.exit("Manual arg received, exiting after single execution.")
    
     elif "true" in wipeout:
@@ -501,11 +514,11 @@ while not monitor.abortRequested():
             stopmusic()
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", "Wrote blank tags to "+str(wipedcount)+" movies.")
-            print "TAG-GEN: Wipeout arg received, exiting after single execution."
+            xbmc.log(msg= "TAG-GEN: Wipeout arg received, exiting after single execution.",level=xbmc.LOGNOTICE)
             sys.exit("Wipeout arg received, exiting after single execution.")
    
     else:
-        print "TAG-GEN: sleeping for "+str(c_refresh)+" hours"
+        xbmc.log(msg= "TAG-GEN: sleeping for "+str(c_refresh)+" hours",level=xbmc.LOGNOTICE)
         while (sleeptime > 0 and not monitor.abortRequested()):
             xbmc.sleep(micronap)
             sleeptime = sleeptime - micronap 

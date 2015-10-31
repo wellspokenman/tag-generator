@@ -10,9 +10,10 @@ try:
 except ImportError:
     from sha import new as sha1
 
-if len(sys.argv) != 2:
 __settings__ = xbmcaddon.Addon()
 __language__ = __settings__.getLocalizedString
+
+if len(sys.argv) != 2:
     xbmc.sleep(1000)
     xbmc.log(msg=_getstr(30002),level=xbmc.LOGNOTICE)
 c_refresh = __settings__.getSetting("32012")

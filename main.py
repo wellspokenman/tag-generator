@@ -12,14 +12,14 @@ except ImportError:
 
 __settings__ = xbmcaddon.Addon()
 __language__ = __settings__.getLocalizedString
-
-if len(sys.argv) != 2:
-    xbmc.sleep(1000)
-    xbmc.log(msg=__language__(30002),level=xbmc.LOGNOTICE)
 c_refresh = __settings__.getSetting("32012")
 c_runasservice = __settings__.getSetting("32011")
 sleeptime = int(c_refresh)*3600000
 micronap = 60000
+
+if len(sys.argv) != 2:
+    xbmc.sleep(1000)
+    xbmc.log(msg=_getstr(30002),level=xbmc.LOGNOTICE)
 
 ###################################################################
 ############################ FUNCTIONS ############################

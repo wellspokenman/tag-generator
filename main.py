@@ -10,15 +10,11 @@ try:
 except ImportError:
     from sha import new as sha1
 
-#I want my strings back please
-def _getstr(id):
-    return str(__language__(id))
-
 if len(sys.argv) != 2:
-    xbmc.sleep(1000)
-    xbmc.log(msg=_getstr(30002),level=xbmc.LOGNOTICE)
 __settings__ = xbmcaddon.Addon()
 __language__ = __settings__.getLocalizedString
+    xbmc.sleep(1000)
+    xbmc.log(msg=_getstr(30002),level=xbmc.LOGNOTICE)
 c_refresh = __settings__.getSetting("32012")
 c_runasservice = __settings__.getSetting("32011")
 sleeptime = int(c_refresh)*3600000
@@ -27,6 +23,10 @@ micronap = 60000
 ###################################################################
 ############################ FUNCTIONS ############################
 ###################################################################
+#I want my strings back please
+def _getstr(id):
+    return str(__language__(id))
+
 #test for interwebs
 def internet_test(url):
     try:

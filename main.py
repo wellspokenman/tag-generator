@@ -10,6 +10,10 @@ try:
 except ImportError:
     from sha import new as sha1
 
+#I want my strings back please
+def _getstr(id):
+    return str(__language__(id))
+
 if len(sys.argv) != 2:
     xbmc.sleep(1000)
     xbmc.log(msg=_getstr(30002),level=xbmc.LOGNOTICE)
@@ -34,10 +38,6 @@ def internet_test(url):
         ok = dialog.ok(_getstr(30000),url + _getstr(30001))
     xbmc.log(msg= "TAG-GEN: " + url + _getstr(30001),level=xbmc.LOGNOTICE)
     sys.exit(url + _getstr(30001))
-
-#I want my strings back please
-def _getstr(id):
-    return str(__language__(id))
 
 #stops the music
 def stopmusic():

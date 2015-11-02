@@ -10,7 +10,7 @@
     </category>
     <category label="IMDB">
         <setting id="32020" type="bool" label="Use IMDB" default="true"/>
-        <setting label="URLs" visible="eq(-1,true)" default="1" type="enum"  id="32099" values="1|2|3|4|5"/>
+        <setting label="30905" visible="eq(-1,true)" default="1" type="enum"  id="32099" values="1|2|3|4|5"/>
         <setting label="30906" type="text" visible="eq(-2,true)" id="32050" default="http://rss.imdb.com/user/ur12345678/watchlist"/>
         <setting label="30903" type="text" visible="eq(-3,true)" id="32080" default="30908"/>
         <setting label="30906" type="text" visible="gt(-3,0) + eq(-4,true)" id="32051" default="http://rss.imdb.com/user/ur12345678/watchlist"/>

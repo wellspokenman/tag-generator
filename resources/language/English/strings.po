@@ -413,8 +413,8 @@ msgid "Stand-up Comedy"
 msgstr "Stand-up Comedy"
 
 msgctxt "#30905"
-msgid "URLs" 
-msgstr "URLs" 
+msgid "Number of URLs"
+msgstr "Number of URLs"
 
 msgctxt "#30906"
 msgid "IMDB Watchlist URL (rss)"

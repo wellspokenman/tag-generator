@@ -1,23 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.tag-generator"
        name="Tag Generator"
-       version="0.0.4"
+       version="0.0.5"
        provider-name="wellspokenman">
   <requires>
     <import addon="xbmc.python" version="2.19.0"/>
-    <import addon="script.module.simplejson" version="3.3.0"/>      
+    <import addon="script.module.simplejson" version="3.3.0"/>
   </requires>
   <extension point="xbmc.service" library="main.py" start="login">  
   </extension>
   <extension point="xbmc.addon.metadata"> 
     <platform>all</platform>
-    <summary lang="en">IMDB and Stand-up Tag Generator</summary>
-    <description lang="en">A simple script to help you create Smart Playlists from IMDB Watchlists by tagging local movies found in specified watchlists. Also creates a stand-up comedy tag based on Wikipedia comedians, as there is no genre for stand-up. Specify your IMDB watchlists then choose your desired XBMC tag for each list. Runs as a service in the background at the specified interval, and also allows for manual creation.</description>
+    <summary lang="en">IMDB, Trakt and Stand-up Tag Generator</summary>
+    <description lang="en">Helps you create Smart Playlists from IMDB/Trakt Watchlists by tagging local movies found in specified watchlists. Also creates a stand-up comedy tag based on Wikipedia comedians, as there is no genre for stand-up. Specify your IMDB/Trakt watchlists then choose your desired Kodi tag for each list. Runs as a service in the background at the specified interval, and also allows for manual creation. For Trakt, you can add lists from your own account, from public accounts, or shared lists from anyone you are friends with (people you follow, who follow you back). </description>
 	<language></language>
 	<license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
 	<forum>http://forum.kodi.tv/showthread.php?tid=140494</forum>
 	<website></website>
 	<source>https://github.com/wellspokenman/tag-generator</source>
 	<email></email>
+    <news>
+    v0.5 (April 4th, 2017)
+    - added Trakt support for 2.0 API (depends on PyTrakt, by Jon Nappi)
+    - code cleanup and text amendments
+    - wikipedia URL updated
+
+    v0.4 (October 31st, 2015)
+    - Kodi support (14 and 15)
+    - IMDB lists now in RSS format. 
+    - error handling for network problems
+    - removed trakt (other addons do this now)
+    - removed music
+
+    v0.3
+    - Added Trakt support for movie watchlist and custom watchlists
+    - Custom Trakt lists are tagged by their name
+    - Added debug mode
+    - Made a pretty icon
+    - code cleanup and speed tweaks
+
+    v0.2
+    - Uses JSON to write the tags so now it's much more portable. 
+    - Should work for people using MySQL just fine. 
+    - MUCH better progress updates, logging and error checking. 
+    - Writes tags instead of playlists - much more flexible
+    - Preserves existing tags and only writes as needed
+    - New feature - much slower! That's just how JSON rolls I'm afraid. 
+    - Background music (to comfort you while you wait)
+    - Uses the xbmc "label" to make a match (no more folder name dependence)  
+    - Option to wipe all your tags if you want to start from scratch
+    </news>
   </extension>
 </addon>

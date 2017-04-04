@@ -2,8 +2,20 @@ import re, urllib2, urllib, httplib, sys, os, time
 import xbmc 
 import xbmcgui 
 import xbmcaddon
-import simplejson
 import json
+try:
+    import simplejson
+    import trakt
+    from trakt import users
+except:
+    if os.name == "nt":
+        slash = "\\"
+    else:
+        slash = "/"
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)+slash+"resources"+slash+"lib"))
+    import simplejson
+    import trakt
+    from trakt import users
 
 try:
     from hashlib import sha1
@@ -40,33 +52,12 @@ def internet_test(url):
     xbmc.log(msg= "TAG-GEN: " + url + _getstr(30001),level=xbmc.LOGNOTICE)
     sys.exit(url + _getstr(30001))
 
-#stops the music
-def stopmusic():
-    playlist = xbmc.PlayList( xbmc.PLAYLIST_MUSIC )
-    playlist.clear()
-    xbmc.Player().stop()
-
-# cancels script and stops the music
+# cancels script
 def ifcancel():
     if len(sys.argv) == 2:
         if (pDialog.iscanceled()):
-            if "true" in c_bgmusic:
-                stopmusic()
             xbmc.log(msg= _getstr(30003),level=xbmc.LOGNOTICE)
             sys.exit(_getstr(30003))
-
-#starts the music
-def playmusic():
-    path=__settings__.getAddonInfo('path')
-    file = path + "/music.mp3"
-    playlist = xbmc.PlayList( xbmc.PLAYLIST_MUSIC )
-    playlist.clear()
-    playlist.add(file)
-    playlist.add(file)
-    playlist.add(file)
-    playlist.add(file)
-    playlist.add(file)
-    xbmc.Player().play( playlist)
 
 #def to make a debug log
 def debuglog(string):
@@ -114,73 +105,14 @@ def getxbmcdb():
             Medialist.append({'xbmcid': item.get('movieid',''),'imdbid': item.get('imdbnumber',''),'name': item.get('label',''),'tag': item.get('tag','')})
     return Medialist
 
-#def to fetch the names of the custom trakt lists
-def gettraktlists(traktuser, traktpass):
-    if len(sys.argv) == 2:
-        pDialog.update (0,_getstr(30009)," "," ")
-    listurl = "https://api.trakt.tv/user/lists.json/b6135e0f7510a44021fac8c03c36c81a17be35d9/" + traktuser
-    debuglog(_getstr(30090) + listurl)
-    list_args = {'username': traktuser, 'password': traktpass}
-    listdata = urllib.urlencode(list_args)
-    listrequest = urllib2.Request(listurl, listdata)
-    listresponse = urllib2.urlopen(listrequest)
-    listhtml = listresponse.read()
-    listjson = simplejson.loads(listhtml)
-    traktlistinfo = []
-    if len(listjson) > 0:
-        for item in listjson:
-            ifcancel()
-            traktlistinfo.append({'listname': item.get('name',''),'listslug': item.get('slug','')})
-            debuglog(_getstr(30091) + (json.dumps(item.get('name',''))) + _getstr(30092) + (json.dumps(item.get('slug',''))))
-    return traktlistinfo
-
-#def to return the contents of a custom Trakt list
-def readtraktlists(traktuser, traktpass, slug):
-    if len(sys.argv) == 2:
-        pDialog.update (0,_getstr(30010) + slug," "," ")
-    ifcancel()
-    listurl = "https://api.trakt.tv/user/list.json/b6135e0f7510a44021fac8c03c36c81a17be35d9/" + traktuser + "/" + slug[1:-1]
-    debuglog(_getstr(30011) + listurl)
-    list_args = {'username': traktuser, 'password': traktpass}
-    listdata = urllib.urlencode(list_args)
-    listrequest = urllib2.Request(listurl, listdata)
-    listresponse = urllib2.urlopen(listrequest)
-    listhtml = listresponse.read()
-    listjson = simplejson.loads(listhtml)
-    traktlist = []
-    for item in listjson['items']:
-        ifcancel()
-        traktlist.append({'imdbid': item['movie'].get('imdb_id',''),'name': item['movie'].get('title','')})
-        debuglog(_getstr(30012) + (json.dumps(item['movie'].get('title',''))) + " " + listurl)
-    return traktlist
-
-#def to fetch Trakt movies from primary Movie watchlist
-def gettrakt(traktuser, traktpass):
-    if len(sys.argv) == 2:
-        pDialog.update (0,_getstr(30013)," "," ")
-    movieurl = "https://api.trakt.tv/user/watchlist/movies.json/b6135e0f7510a44021fac8c03c36c81a17be35d9/" + traktuser
-    movie_args = {'username': traktuser, 'password': traktpass}
-    moviedata = urllib.urlencode(movie_args)
-    movierequest = urllib2.Request(movieurl, moviedata)
-    movieresponse = urllib2.urlopen(movierequest)
-    moviehtml = movieresponse.read()
-    moviejson = simplejson.loads(moviehtml)
-    traktlist = []
-    for item in moviejson:
-        ifcancel()
-        traktlist.append({'imdbid': item.get('imdb_id',''),'name': item.get('title','')})
-        debuglog(_getstr(30012) + (json.dumps(item.get('title',''))) + _getstr(30015) + movieurl)
-    return traktlist
-
 # write tags for locally found movies given a Trakt watchlist, local media list and the new tag to write
-def writetrakttags(traktlist, Medialist, newtrakttag):
+def write_trakt_tags(traktlist, Medialist, newtrakttag):
     if len(sys.argv) == 2:
         pDialog.update (0,_getstr(30016)," "," ")
     moviecount = 0
     counter = 0
-    for traktitem in traktlist:
+    for traktimdbid in traktlist:
         ifcancel()
-        traktimdbid = (json.dumps(traktitem.get('imdbid','')))
         counter = counter + 1
         for movie in Medialist:
             xbmcimdbid = (json.dumps(movie.get('imdbid','')))
@@ -200,6 +132,26 @@ def writetrakttags(traktlist, Medialist, newtrakttag):
             if len(sys.argv) == 2:
                 pDialog.update (percent,"",_getstr(30024) + str(counter) + "/" + str(len(traktlist)) + _getstr(30025))
     return moviecount
+
+    
+# return imdb ids for movies in a given trakt list. Requires oauth token.    
+def get_trakt_movies(user_name, list_name, token):
+    trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
+    trakt.core.OAUTH_TOKEN = token
+    trakt.core.CLIENT_ID = trakt_client_id
+    trakt.core.CLIENT_SECRET = trakt_client_secret
+    target_list = list()
+    if list_name.lower() == "watchlist":
+        target_list = users.User(user_name).watchlist_movies
+    else:
+        target_list = users.User(user_name).get_list(list_name).get_items()
+    found_ids = list()
+    for item in target_list:
+        imdb_id = item.ids["ids"]["imdb"]
+        if not imdb_id in found_ids:
+            found_ids.append(imdb_id)
+            debuglog(_getstr(30012) + (str(item)) + _getstr(30015) + list_name)
+    return found_ids
 
 # def to write tags via json. Requires the xbmcid, the existing xbmctag and the new tag
 def writetags(xbmcid, newtag, xbmctag):
@@ -286,7 +238,7 @@ def writeimdbtags(imdblist, Medialist, newimdbtag):
 
 # Scrapes Wikipedia URLs for comedian names given a single url
 def scrapewiki():
-    internet_test("http://en.wikipedia.org")
+    internet_test("https://en.wikipedia.org")
     if len(sys.argv) == 2:
         pDialog.update (0,_getstr(30046)," "," ")
     comiclist = []
@@ -346,11 +298,11 @@ def writestanduptags(comiclist, Medialist, newwikitag):
 ###################################################################
 
 # These are the URLs that we will be searching for comedians
-wikiurllist=["http://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
-"http://en.wikipedia.org/wiki/List_of_stand-up_comedians",
-"http://en.wikipedia.org/wiki/List_of_Australian_stand-up_comedians",
-"http://en.wikipedia.org/wiki/List_of_Canadian_stand-up_comedians",
-"http://en.wikipedia.org/wiki/List_of_United_States_stand-up_comedians"]
+wikiurllist=["https://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
+"https://en.wikipedia.org/wiki/List_of_stand-up_comedians",
+"https://en.wikipedia.org/wiki/List_of_Australian_stand-up_comedians",
+"https://en.wikipedia.org/wiki/List_of_Canadian_stand-up_comedians",
+"https://en.wikipedia.org/wiki/List_of_United_States_stand-up_comedians"]
 
 monitor = xbmc.Monitor()
 while not monitor.abortRequested():
@@ -370,19 +322,24 @@ while not monitor.abortRequested():
     c_minusurl = __settings__.getSetting("32014")
     c_urlcount =  __settings__.getSetting("32099")
     c_useimdb =  __settings__.getSetting("32020")
-    #c_bgmusic = __settings__.getSetting("32021")
-    c_bgmusic = "false"
-    c_usetrakt = "false"
-    #c_usetrakt = __settings__.getSetting("32023")
-    # c_trakttag = __settings__.getSetting("32024")
-    #c_traktuser = __settings__.getSetting("32025")
-    # c_traktpass = sha1(__settings__.getSetting("32026")).hexdigest()
-    # c_usetraktlists = __settings__.getSetting("32029")
-    c_usetraktlists="false"
+    c_usetrakt = __settings__.getSetting("32023")
+    trakt_list_start=32120
+    trakt_tag_start=32140
+    trakt_user_start=32160
+    c_trakt_list = __settings__.getSetting(str(trakt_list_start))
+    c_trakt_tag = __settings__.getSetting(str(trakt_tag_start))
+    c_trakt_user = __settings__.getSetting(str(trakt_user_start))
+    trakt.core.APPLICATION_ID = '12265'
+    trakt_client_id = '8bc9b1371d9594b451c863bea2c95aa96ac5e5bf9ecee274daa23c0790386afe'
+    trakt_client_secret = '6087cbfb47b8f0cdc1c0fc491ec52524c9d23bf37a8480a8c2827ea91312cbad'
+    c_trakt_token = __settings__.getSetting("32031")
+    c_trakt_list_count = __settings__.getSetting("32098")
     c_debug = __settings__.getSetting("32030")
     manual = "false"
     wipeout = "false"
 
+    
+    
 # Initialise IMDB URL list, add extra to list if specified by settings.xml. 
 # Also make a list out of the user-defined tags
     listurlcount = int(c_urlcount)
@@ -397,22 +354,32 @@ while not monitor.abortRequested():
         c_imdbtag = __settings__.getSetting(str(TAGID))
         listurlcount = listurlcount -1
 
+# init trakt lists and tags        
+    trakt_list_count = int(c_trakt_list_count)
+    trakt_lists = list()
+    trakt_tags = list()
+    trakt_users = list()
+    while trakt_list_count > -1:
+        trakt_lists.append(c_trakt_list)
+        trakt_tags.append(c_trakt_tag)
+        trakt_users.append(c_trakt_user)
+        trakt_list_start+=1
+        trakt_tag_start+=1
+        c_trakt_list = __settings__.getSetting(str(trakt_list_start))
+        c_trakt_tag = __settings__.getSetting(str(trakt_tag_start))
+        c_trakt_user = __settings__.getSetting(str(trakt_user_start))
+        trakt_list_count -= 1
+        
 #command line arguments for manual/tag delete executions
     if len(sys.argv) == 2:
         if "manual" in sys.argv[1]:
-            if "true" in c_bgmusic:
-                playmusic()
             manual = "true"
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30064))
         elif "wipeout" in sys.argv[1]:
-            if "true" in c_bgmusic:
-                playmusic()
-                wipeout = "true"
+            wipeout = "true"
             if xbmcgui.Dialog().yesno("Tag Generator", _getstr(30065)):
                 if xbmcgui.Dialog().yesno("Tag Generator", _getstr(30066)):
-                    if "true" in c_bgmusic:
-                        playmusic()
                     pDialog = xbmcgui.DialogProgress()
                     pDialog.create("Tag Generator", _getstr(30067))
                     xbmc.log(msg= _getstr(30068),level=xbmc.LOGNOTICE)
@@ -420,65 +387,81 @@ while not monitor.abortRequested():
                     xbmc.log(msg= _getstr(30093),level=xbmc.LOGNOTICE)
                     sys.exit(_getstr(30093))
                 else:
-                    stopmusic()
                     xbmc.log(msg= _getstr(30069),level=xbmc.LOGNOTICE)
                     sys.exit(_getstr(30069))
             else:
-                stopmusic()
                 xbmc.log(msg= _getstr(30069),level=xbmc.LOGNOTICE)
                 sys.exit(_getstr(30069))
-        elif "trakt" in sys.argv[1]:
-            pDialog = xbmcgui.DialogProgress()
-            ret = pDialog.create("Tag Generator", _getstr(30064))
-            if "true" in c_bgmusic:
-                playmusic()
-            xbmc.log(msg= _getstr(30070),level=xbmc.LOGNOTICE)
-            Medialist = getxbmcdb()
-            if "true" in c_usetrakt:
-                traktlist = gettrakt(c_traktuser, c_traktpass)
-                moviecount = writetrakttags(traktlist, Medialist, c_trakttag)
-            if "true" in c_usetraktlists:
-                traktlistinfo = gettraktlists(c_traktuser, c_traktpass)
-                if len (traktlistinfo) > 0:
-                    for item in traktlistinfo:
-                        slug = (json.dumps(item.get('listslug','')))
-                        name = (json.dumps(item.get('listname','')))
-                        traktlist = readtraktlists(c_traktuser, c_traktpass, slug)
-                        moviecount = writetrakttags(traktlist, Medialist, name[1:-1])
-                else:
-                    xbmc.log(msg= _getstr(30071),level=xbmc.LOGNOTICE)
-            stopmusic()
-            sys.exit(_getstr(30072))
         elif "standup" in sys.argv[1]:
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30064))
-            if "true" in c_bgmusic:
-                playmusic()
             xbmc.log(msg= _getstr(30073),level=xbmc.LOGNOTICE)
             Medialist = getxbmcdb()
             newwikitag = c_standuptag
             comedians = scrapewiki()
             comiccount = writestanduptags(comedians, Medialist, newwikitag)
-            stopmusic()
+            dialog = xbmcgui.Dialog()
+            ok = dialog.ok("Tag Generator", _getstr(30081)+str(comiccount)+_getstr(30083))
             sys.exit(_getstr(30075))
         elif "imdb" in sys.argv[1]:
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30064))
-            if "true" in c_bgmusic:
-                playmusic()
             xbmc.log(msg= _getstr(30074),level=xbmc.LOGNOTICE)
             Medialist = getxbmcdb()
             scrapecount = 0
             for imdburl in imdburllist:
                 newimdbtag = imdbtaglist[scrapecount]
                 imdblist = scrapeimdbrss(imdburl, scrapecount)
-                moviecount = writeimdbtags(imdblist, Medialist, newimdbtag)
+                moviecount += writeimdbtags(imdblist, Medialist, newimdbtag)
                 scrapecount = scrapecount + 1
-            stopmusic()
+            dialog = xbmcgui.Dialog()
+            ok = dialog.ok("Tag Generator", _getstr(30081)+str(moviecount)+_getstr(30930))
             sys.exit(_getstr(30076))
+        elif sys.argv[1] == "trakt_init":
+            dialog = xbmcgui.Dialog()
+            ok = dialog.ok("Tag Generator", _getstr(30923))
+            dialog = xbmcgui.Dialog()
+            d = dialog.input(_getstr(30924))
+            if d:
+                try:
+                    trakt_token=trakt.init(pin=d,client_id=trakt_client_id,client_secret=trakt_client_secret)
+                    __settings__.setSetting("32031",trakt_token)
+                    sys.exit(_getstr(30927))
+                except Exception, e:
+                    dialog = xbmcgui.Dialog()
+                    ok = dialog.ok("Tag Generator", _getstr(30925)+str(e.message))
+                    sys.exit(_getstr(30927))
+            else:
+                sys.exit(_getstr(30927))
+        elif sys.argv[1] == "trakt":
+            if len(c_trakt_token) != 64:
+                dialog = xbmcgui.Dialog()
+                ok = dialog.ok("Tag Generator", _getstr(30925))
+                xbmc.log(msg= _getstr(30925),level=xbmc.LOGNOTICE)
+                sys.exit(_getstr(30925))
+            pDialog = xbmcgui.DialogProgress()
+            ret = pDialog.create("Tag Generator", _getstr(30064))
+            xbmc.log(msg= _getstr(30070),level=xbmc.LOGNOTICE)
+            Medialist = getxbmcdb()
+            i = 0
+            for this_trakt_list in trakt_lists:
+                this_trakt_tag = trakt_tags[i]
+                this_trakt_user = trakt_users[i]
+                try:
+                    trakt_movies = get_trakt_movies(this_trakt_user, this_trakt_list, c_trakt_token)
+                    moviecount += write_trakt_tags(trakt_movies, Medialist, this_trakt_tag)
+                except:
+                    xbmc.log(msg= _getstr(30928),level=xbmc.LOGERROR)
+                i+=1
+            dialog = xbmcgui.Dialog()
+            ok = dialog.ok("Tag Generator", _getstr(30081)+str(moviecount)+_getstr(30930))
+            xbmc.log(msg= _getstr(30084),level=xbmc.LOGNOTICE)
+            sys.exit(_getstr(30927))        
         else:
             xbmc.log(msg= _getstr(30077),level=xbmc.LOGNOTICE)
+            sys.exit(_getstr(30077))
 
+            
 #### Read the local XBMC DB ####
     Medialist = getxbmcdb()
 
@@ -506,38 +489,30 @@ while not monitor.abortRequested():
         xbmc.log(msg= _getstr(30079),level=xbmc.LOGNOTICE)
 
 #### Trakt movies tag writing ####
-    if ("true" in c_usetrakt or c_usetraktlists) and ("false" in wipeout):
-        if "true" in c_usetrakt:
-            traktlist = gettrakt(c_traktuser, c_traktpass)
-            moviecount = moviecount + writetrakttags(traktlist, Medialist, c_trakttag)
-        if "true" in c_usetraktlists:
-            traktlistinfo = gettraktlists(c_traktuser, c_traktpass)
-            if len (traktlistinfo) > 0:
-                for item in traktlistinfo:
-                    slug = (json.dumps(item.get('listslug','')))
-                    name = (json.dumps(item.get('listname','')))
-                    traktlist = readtraktlists(c_traktuser, c_traktpass, slug)
-                    moviecount = moviecount + writetrakttags(traktlist, Medialist, name[1:-1])
-            else:
-                xbmc.log(msg= _getstr(30071),level=xbmc.LOGNOTICE)
+    if ("true" in c_usetrakt) and ("false" in wipeout) and (len(c_trakt_token) == 64):
+        scrapecount = 0
+        for this_trakt_list in trakt_lists:
+            this_trakt_tag = trakt_tags[scrapecount]
+            try:
+                trakt_movies = get_trakt_movies(this_trakt_list, c_trakt_token)
+                moviecount += write_trakt_tags(trakt_movies, Medialist, this_trakt_tag)
+            except:
+                xbmc.log(msg= _getstr(30928),level=xbmc.LOGERROR)
+            scrapecount = scrapecount + 1
     else:
         xbmc.log(msg= _getstr(30080),level=xbmc.LOGNOTICE)
 
     if "true" in manual:
-        if "true" in c_bgmusic:
-            stopmusic()
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30081)+str(moviecount)+_getstr(30082) + str(comiccount)+_getstr(30083))
         xbmc.log(msg= _getstr(30084),level=xbmc.LOGNOTICE)
         sys.exit(_getstr(30084))
    
     elif "true" in wipeout:
-        if "true" in c_bgmusic:
-            stopmusic()
-            dialog = xbmcgui.Dialog()
-            ok = dialog.ok("Tag Generator", _getstr(30085)+str(wipedcount)+_getstr(30086))
-            xbmc.log(msg= _getstr(30087),level=xbmc.LOGNOTICE)
-            sys.exit(_getstr(30087))
+        dialog = xbmcgui.Dialog()
+        ok = dialog.ok("Tag Generator", _getstr(30085)+str(wipedcount)+_getstr(30086))
+        xbmc.log(msg= _getstr(30087),level=xbmc.LOGNOTICE)
+        sys.exit(_getstr(30087))
    
     else:
         xbmc.log(msg= _getstr(30088)+str(c_refresh)+_getstr(30089),level=xbmc.LOGNOTICE)

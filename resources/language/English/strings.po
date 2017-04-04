@@ -29,8 +29,8 @@ msgid "TAG-GEN: Starting as a service."
 msgstr "TAG-GEN: Starting as a service."
 
 msgctxt "#30003"
-msgid "TAG-GEN: Cancel received from XBMC dialog, exiting."
-msgstr "TAG-GEN: Cancel received from XBMC dialog, exiting."
+msgid "TAG-GEN: Cancel received from Kodi dialog, exiting."
+msgstr "TAG-GEN: Cancel received from Kodi dialog, exiting."
 
 msgctxt "#30004"
 msgid "Operation cancelled."
@@ -49,8 +49,8 @@ msgid "Alrighty then..."
 msgstr "Alrighty then..."
 
 msgctxt "#30008"
-msgid "Reading your XBMC DB..."
-msgstr "Reading your XBMC DB..."
+msgid "Reading your Kodi DB..."
+msgstr "Reading your Kodi DB..."
 
 msgctxt "#30009"
 msgid "Checking for custom Trakt lists..."
@@ -77,8 +77,8 @@ msgid "TAG-GEN: Found Trakt movie "
 msgstr "TAG-GEN: Found Trakt movie "
 
 msgctxt "#30015"
-msgid " in primary watchlist: "
-msgstr " in primary watchlist: "
+msgid " in Trakt list: "
+msgstr " in Trakt List: "
 
 msgctxt "#30016"
 msgid "Scanning for local matches to Trakt movie watchlists."
@@ -277,8 +277,8 @@ msgid "Initialising..."
 msgstr "Initialising..."
 
 msgctxt "#30065"
-msgid "Do you really want to wipe out all your local XBMC tags?"
-msgstr "Do you really want to wipe out all your local XBMC tags?"
+msgid "Do you really want to wipe out all your local Kodi tags?"
+msgstr "Do you really want to wipe out all your local Kodi tags?"
 
 msgctxt "#30066"
 msgid "Really Really REALLY?"
@@ -289,8 +289,8 @@ msgid "Alrighty then..."
 msgstr "Alrighty then..."
 
 msgctxt "#30068"
-msgid "TAG-GEN: Wiping all your XBMC tags..."
-msgstr "TAG-GEN: Wiping all your XBMC tags..."
+msgid "TAG-GEN: Wiping all your Kodi tags..."
+msgstr "TAG-GEN: Wiping all your Kodi tags..."
 
 msgctxt "#30069"
 msgid "TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting."
@@ -459,3 +459,59 @@ msgstr "Write All Tags"
 msgctxt "#30916"
 msgid "Delete All Tags"
 msgstr "Delete All Tags"
+
+msgctxt "#30917"
+msgid "Request Token"
+msgstr "Request Token"
+
+msgctxt "#30918"
+msgid "Trakt Token"
+msgstr "Trakt Token"
+
+msgctxt "#30919"
+msgid "-please request token-"
+msgstr "-please request token-"
+
+msgctxt "#30920"
+msgid "Write Trakt Tags"
+msgstr "Write Trakt Tags"
+
+msgctxt "#30921"
+msgid "Number of Lists"
+msgstr "Number of Lists"
+
+msgctxt "#30922"
+msgid "Trakt List Name"
+msgstr "Trakt List Name"
+
+msgctxt "#30923"
+msgid "Please visit the following URL to generate your Trakt PIN, then press OK: \n https://trakt.tv/pin/12265"
+msgstr "Please visit the following URL to generate your Trakt PIN, then press OK: \n https://trakt.tv/pin/12265"
+
+msgctxt "#30924"
+msgid "Enter PIN"
+msgstr "Enter PIN"
+
+msgctxt "#30925"
+msgid "Error: Unable to retrieve Trakt oauth token."
+msgstr "Error: Unable to retrieve Trakt oauth token."
+
+msgctxt "#30926"
+msgid "Success: please exit then enter Tag Generator configuration."
+msgstr "Success: please exit then enter Tag Generator configuration."
+
+msgctxt "#30927"
+msgid "TAG-GEN: Manual Trakt Init arg received, exiting after execution."
+msgstr "TAG-GEN: Manual Trakt Init arg received, exiting after execution."
+
+msgctxt "#30928"
+msgid "Error: Could not retrieve movies from Trakt API."
+msgstr "Error: Could not retrieve movies from Trakt API."
+
+msgctxt "#30929"
+msgid "Trakt Username"
+msgstr "Trakt Username"
+
+msgctxt "#30930"
+msgid " movies"
+msgstr " movies"

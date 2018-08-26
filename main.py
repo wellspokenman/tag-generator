@@ -1,8 +1,11 @@
 import re, urllib2, urllib, httplib, sys, os, time
-import xbmc 
-import xbmcgui 
+import xbmc
+import xbmcgui
 import xbmcaddon
 import json
+import requests
+from bs4 import BeautifulSoup
+from BeautifulSoup import BeautifulStoneSoup
 try:
     import simplejson
     import trakt
@@ -47,7 +50,7 @@ def internet_test(url):
         return True
     except urllib2.URLError as err: pass
     if len(sys.argv) == 2:
-        dialog = xbmcgui.Dialog() 
+        dialog = xbmcgui.Dialog()
         ok = dialog.ok(_getstr(30000),url + _getstr(30001))
     xbmc.log(msg= "TAG-GEN: " + url + _getstr(30001),level=xbmc.LOGNOTICE)
     sys.exit(url + _getstr(30001))
@@ -72,7 +75,7 @@ def sorted(it):
     alist.sort()
     return alist
 
-# A function to overwrite EVERY tag found in the database with a blank [] tag.    
+# A function to overwrite EVERY tag found in the database with a blank [] tag.
 def wipealltags():
     counter = 0
     Medialist = getxbmcdb()
@@ -91,18 +94,26 @@ def wipealltags():
 
 # dump the entire XBMC library to a big fat python list of dicts
 def getxbmcdb():
+    # if wipeout is true; update gui dialog 30007
+    # elif length of sys.argv == 2; update gui dialog 30008
     if "true" in wipeout:
         pDialog.update (0,_getstr(30007)," "," ")
     elif len(sys.argv) == 2:
         pDialog.update (0,_getstr(30008)," "," ")
-    json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies","params": {"properties" : ["tag","imdbnumber"], "sort": { "order": "ascending", "method": "label", "ignorearticle": true } }, "id": "libMovies"}')
+    # json # convert to unicode # create json
+    json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties" : ["title","studio","tag","imdbnumber","year"], "sort": {"order": "ascending", "method": "label", "ignorearticle": true}}, "id": "libMovies"}')
     json_query = unicode(json_query, 'utf-8', errors='ignore')
     jsonobject = simplejson.loads(json_query)
+    # create media list
     Medialist = []
+    # if json has key == movies
     if jsonobject['result'].has_key('movies'):
+        # for each movie in json
         for item in jsonobject['result']['movies']:
             ifcancel()
-            Medialist.append({'xbmcid': item.get('movieid',''),'imdbid': item.get('imdbnumber',''),'name': item.get('label',''),'tag': item.get('tag','')})
+            # append new movie to Medialist
+            Medialist.append({'xbmcid': item.get('movieid',''),'imdbid': item.get('imdbnumber',''),'name':
+            item.get('label',''),'tag': item.get('tag',''), 'year':item.get('year','')})
     return Medialist
 
 # write tags for locally found movies given a Trakt watchlist, local media list and the new tag to write
@@ -133,8 +144,8 @@ def write_trakt_tags(traktlist, Medialist, newtrakttag):
                 pDialog.update (percent,"",_getstr(30024) + str(counter) + "/" + str(len(traktlist)) + _getstr(30025))
     return moviecount
 
-    
-# return imdb ids for movies in a given trakt list. Requires oauth token.    
+
+# return imdb ids for movies in a given trakt list. Requires oauth token.
 def get_trakt_movies(user_name, list_name, token):
     trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
     trakt.core.OAUTH_TOKEN = token
@@ -338,9 +349,9 @@ while not monitor.abortRequested():
     manual = "false"
     wipeout = "false"
 
-    
-    
-# Initialise IMDB URL list, add extra to list if specified by settings.xml. 
+
+
+# Initialise IMDB URL list, add extra to list if specified by settings.xml.
 # Also make a list out of the user-defined tags
     listurlcount = int(c_urlcount)
     imdburllist = []
@@ -354,7 +365,7 @@ while not monitor.abortRequested():
         c_imdbtag = __settings__.getSetting(str(TAGID))
         listurlcount = listurlcount -1
 
-# init trakt lists and tags        
+# init trakt lists and tags
     trakt_list_count = int(c_trakt_list_count)
     trakt_lists = list()
     trakt_tags = list()
@@ -369,7 +380,7 @@ while not monitor.abortRequested():
         c_trakt_tag = __settings__.getSetting(str(trakt_tag_start))
         c_trakt_user = __settings__.getSetting(str(trakt_user_start))
         trakt_list_count -= 1
-        
+
 #command line arguments for manual/tag delete executions
     if len(sys.argv) == 2:
         if "manual" in sys.argv[1]:
@@ -456,12 +467,12 @@ while not monitor.abortRequested():
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30081)+str(moviecount)+_getstr(30930))
             xbmc.log(msg= _getstr(30084),level=xbmc.LOGNOTICE)
-            sys.exit(_getstr(30927))        
+            sys.exit(_getstr(30927))
         else:
             xbmc.log(msg= _getstr(30077),level=xbmc.LOGNOTICE)
             sys.exit(_getstr(30077))
 
-            
+
 #### Read the local XBMC DB ####
     Medialist = getxbmcdb()
 
@@ -507,15 +518,15 @@ while not monitor.abortRequested():
         ok = dialog.ok("Tag Generator", _getstr(30081)+str(moviecount)+_getstr(30082) + str(comiccount)+_getstr(30083))
         xbmc.log(msg= _getstr(30084),level=xbmc.LOGNOTICE)
         sys.exit(_getstr(30084))
-   
+
     elif "true" in wipeout:
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30085)+str(wipedcount)+_getstr(30086))
         xbmc.log(msg= _getstr(30087),level=xbmc.LOGNOTICE)
         sys.exit(_getstr(30087))
-   
+
     else:
         xbmc.log(msg= _getstr(30088)+str(c_refresh)+_getstr(30089),level=xbmc.LOGNOTICE)
         while (sleeptime > 0 and not monitor.abortRequested()):
             xbmc.sleep(micronap)
-            sleeptime = sleeptime - micronap 
+            sleeptime = sleeptime - micronap

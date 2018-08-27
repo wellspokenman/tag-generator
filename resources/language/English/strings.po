@@ -452,6 +452,10 @@ msgctxt "#30914"
 msgid "Write Stand-Up Tags"
 msgstr "Write Stand-Up Tags"
 
+msgctxt "#30931"
+msgid "Write Oscar Award Tags"
+msgstr "Write Oscar Award Tags"
+
 msgctxt "#30915"
 msgid "Write All Tags"
 msgstr "Write All Tags"

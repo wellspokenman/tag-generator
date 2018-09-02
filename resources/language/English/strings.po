@@ -561,8 +561,8 @@ msgid " oscar nominated features."
 msgstr " oscar nominted features."
 
 msgctxt "#33057"
-msgid "aquiring links to relevant academy awards "
-msgstr "aquiring links to relevant academy awards "
+msgid "aquiring links nominated in relevant academy awards "
+msgstr "aquiring links nominated in relevant academy awards "
 
 msgctxt "#33058"
 msgid " oscar nominated films."
@@ -604,7 +604,7 @@ msgctxt "#33068"
 msgid "wiki url failed: "
 msgstr "wiki url failed: "
 
-msgctxt "#33009"
+msgctxt "#33069"
 msgid "creating set of links"
 msgstr "creating set of links"
 
@@ -629,8 +629,8 @@ msgid "url: "
 msgstr "url: "
 
 msgctxt "#33075"
-msgid "creating dict to write to search compare to library"
-msgstr "creating dict to write to search compare to library"
+msgid "creating imdb set"
+msgstr "creating imdb set"
 
 msgctxt "#33076"
 msgid "comparing to library"
@@ -647,3 +647,15 @@ msgstr "imdbid: "
 msgctxt "#33079"
 msgid "TAG-GEN: Skipping oscars tag writing."
 msgstr "TAG-GEN: Skipping oscars tag writing."
+
+msgctxt "#33080"
+msgid "cataloging every distinct year in library"
+msgstr "cataloging every distinct year in library"
+
+msgctxt "#33081"
+msgid "failure to log year of film"
+msgstr "failure to log year of film"
+
+msgctxt "#33082"
+msgid "failure to log years of medialist"
+msgstr "failure to log years of medialist"

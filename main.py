@@ -1,4 +1,4 @@
-import re, urllib2, urllib, httplib, sys, os, time
+import re, urllib2, urllib, httplib, sys, os, datetime, time
 import xbmc
 import xbmcgui
 import xbmcaddon
@@ -304,6 +304,29 @@ def writestanduptags(comiclist, Medialist, newwikitag):
                     pDialog.update (percent,"",_getstr(30057) + str(counter) + "/" + str(len(comiclist)) + _getstr(30058))
     return comicmatches
 
+# input movie wiki url. output imdb movie id
+def find_imdb_id(wikiurl):
+    wiki_https = "https://www.wikipedia.org"
+    # BeautifulSoup
+    page = requests.get(wiki_https + wikiurl)
+    page_soup = BeautifulSoup(page.text, "html.parser")
+    # capture main body
+    page_portion = page_soup.find(class_="mw-parser-output")
+    # for each unordered list
+    if page_portion is not None:
+        for ul in page_portion.find_all("ul"):
+            ifcancel()
+            # for each list item
+            for ul_li in ul.find_all("li"):
+                # for each hyperlink
+                for ul_li_a in ul_li.find_all("a"):
+                    # if link points to imdb website, return imdbid tag
+                    imdb_href = ul_li_a.get("href")
+                    if imdb_href is not None and "imdb.com" in imdb_href:
+                        imdbid = imdb_href[-10:-1]
+                        return imdbid
+    return ''
+
 # find all ceremony urls
 def find_academy_ceremonies(academy_ceremony_url_list, year_set):
     internet_test("https://en.wikipedia.org")
@@ -322,59 +345,69 @@ def find_academy_ceremonies(academy_ceremony_url_list, year_set):
         # loop through all tables with class = "wikitable"
         for table in page_portion.find_all("table", "wikitable"):
             ifcancel()
-            # for every table row in table
-            for table_tr in table.find_all("tr"):
-                # var to only take year iff link was taken in
-                find_date = False
-                is_link_added = False
-                # find year in date of ceremony
-                for table_tr_td in table_tr.find_all("td"):
-                    # after link added add date from next table cell right
-                    if find_date:
-                        if table_tr_td.text[-4:].isdigit():
-                            year_list.append(table_tr_td.text[-4:])
-                            find_date = False
-                    # for all links in table row
-                    for table_tr_td_a in table_tr_td.find_all("a"):
-                        if not is_link_added:
-                            # append link to url_list
-                            url = table_tr_td_a.get("href")
-                            text = table_tr_td_a.text
-                            if len(text) > 1 and len(text) < 5 and text[0].isdigit():
-                                url_list.append("https://wikipedia.org" + url)
-                                find_date = True
-                                is_link_added = True
-        # create year dict: list of urls for ceremonies
-        if len(year_list) == len(url_list):
-            # loop. add ceremony urls by year to list in dict
-            for n in xrange(len(year_list)):
-                # aquire year
-                year = year_list[n]
-                # add empty list to value to dictionary
-                if year not in year_url_dict:
-                    year_url_dict[year] = []
-                # append ceremony url to list
-                year_url_dict[year].append(url_list[n])
-        else:
+            try:
+                # for every table row in table
+                for table_tr in table.find_all("tr"):
+                    # var to only take year iff link was taken in
+                    find_date = False
+                    is_link_added = False
+                    # find year in date of ceremony
+                    for table_tr_td in table_tr.find_all("td"):
+                        # after link added, add date  to year_list -> from next table cell right
+                        if find_date:
+                            if table_tr_td.text[-4:].isdigit():
+                                year_list.append(table_tr_td.text[-4:])
+                                find_date = False
+                        # for all links in table row
+                        for table_tr_td_a in table_tr_td.find_all("a"):
+                            if not is_link_added:
+                                # append link to url_list
+                                url = table_tr_td_a.get("href")
+                                text = table_tr_td_a.text
+                                if len(text) > 1 and len(text) < 5 and text[0].isdigit():
+                                    url_list.append("https://wikipedia.org" + url)
+                                    find_date = True
+                                    is_link_added = True
+            except:
+                if len(sys.argv) == 2:
+                    pDialog.update(0, _getstr(30000), "Failed to aquire all academy awards")
+                    xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
+        try:
+            # create year dict: list of urls for ceremonies
+            if len(year_list) == len(url_list):
+                # loop. add ceremony urls by year to list in dict
+                for n in xrange(len(year_list)):
+                    # aquire year
+                    year = year_list[n]
+                    # add empty list to value to dictionary
+                    if year not in year_url_dict:
+                        year_url_dict[year] = []
+                    # append ceremony url to list
+                    year_url_dict[year].append(url_list[n])
+            else:
+                if len(sys.argv) == 2:
+                    xbmcgui.Dialog().ok("Tag Generator", "list lengths are different. now you got a lawsuit in your hands...")
+            # create new list with only relevent ceremonies
+            # loop. for every relevent year add potential ceremony url to url_list_relevent
+            url_set_relevant = set()
+            for year in year_set:
+                ifcancel()
+                list_of_relevant_years = []
+                # for possibly relevant ceremonies for movies in said year
+                for i in xrange(3):
+                    new_year = str(int(year) + i)
+                    # if new year in year_url_dict then append
+                    if new_year in year_url_dict:
+                        list_of_relevant_years.append(new_year)
+                # add possible ceremonies
+                for relevant_year in list_of_relevant_years:
+                    for url_ceremony in year_url_dict[relevant_year]:
+                        url_set_relevant.add(url_ceremony)
+            sorted(url_set_relevant)
+        except:
             if len(sys.argv) == 2:
-                xbmcgui.Dialog().ok("Tag Generator", "list lengths are different. now you got a lawsuit in your hands...")
-        # create new list with only relevent ceremony
-        # loop. for every relevent year add potential ceremony url to url_list_relevent
-        url_set_relevant = set()
-        for year in year_set:
-            ifcancel()
-            list_of_relevant_years = []
-            # for possibly relevant ceremonies for movies in said year
-            for i in xrange(3):
-                new_year = str(int(year) + i)
-                # if new year in year_url_dict then append
-                if new_year in year_url_dict:
-                    list_of_relevant_years.append(new_year)
-            # add possible ceremonies
-            for relevant_year in list_of_relevant_years:
-                for url_ceremony in year_url_dict[relevant_year]:
-                    url_set_relevant.add(url_ceremony)
-        sorted(url_set_relevant)
+                pDialog.update(0, _getstr(30000), "Failed to process ceremonies")
+                xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
     return url_set_relevant
 
 # return list of years in xbmc library.
@@ -392,16 +425,17 @@ def get_years(Medialist):
             percent = (100 * counter/len(Medialist))
             try:
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, "getting every distinct year in library", "progress: " + str(counter) + "/" + str(len(Medialist)), "")
+                    pDialog.update(percent, _getstr(33080), _getstr(33067) + str(counter) + "/" + str(len(Medialist)), "")
+                    debuglog(_getstr(33080) + "\n" +  _getstr(33067) + str(counter) + "/" + str(len(Medialist)))
                 # get year, add to set
                 xbmc_year = (json.dumps(movie.get('year','')))
                 year_set.add(xbmc_year)
             except:
                 if len(sys.argv) == 2:
-                    ok = xbmcgui.Dialog().ok("Tag Generator", "movie failed")
+                    pDialog.update(percent, _getstr(33081), _getstr(33067) + str(counter) + "/" + str(len(Medialist)), "")
     except:
         if len(sys.argv) == 2:
-            ok = xbmcgui.Dialog().ok("Tag Generator", "unable to get years.")
+            pDialog.update("Tag Generator", _getstr(33082))
     return year_set
 
 # Scrapes wikipedia for characteristics/awards and returns movies with tag info
@@ -414,6 +448,8 @@ def scrapewiki_oscars(source_url_list, Medialist):
         debuglog(_getstr(33046))
     # aquire list of years in library
     year_set = get_years(Medialist)
+    if len(year_set) <=0:
+        year_set = list(range(1929, datetime.datetime.now().year))
     # update gui
     if len(sys.argv) == 2:
         pDialog.update(0,_getstr(33057), _getstr(33064) + " " + str(len(year_set)), " ")
@@ -469,8 +505,8 @@ def scrapewiki_oscars(source_url_list, Medialist):
                                 wiki_url_dict[key] = url_list
             except:
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, _getstr(33068) + wikiurl, " ", " ")
-                    debuglog(_getstr(33068) + wikiurl)
+                    pDialog.update(0, _getstr(30000), wikiurl + _getstr(33049))
+                    xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
         if len(sys.argv) == 2:
             pDialog.update(0, _getstr(33069), " ", " ")
             debuglog(_getstr(33069))
@@ -525,9 +561,9 @@ def scrapewiki_oscars(source_url_list, Medialist):
     except:
         # update gui & log & exit
         if len(sys.argv) == 2:
-            ok = xbmcgui.Dialog().ok(_getstr(30000),wikiurl + _getstr(33049))
-        xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
-        sys.exit(wikiurl + _getstr(33049))
+            pDialog.update(0, _getstr(30000), wikiurl + _getstr(33049))
+            xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
+            # sys.exit(wikiurl + _getstr(33049))
     # return
     return imdb_id_dict, unique_imdbs
 

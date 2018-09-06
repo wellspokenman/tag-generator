@@ -93,20 +93,20 @@ msgid "' to "
 msgstr "' to "
 
 msgctxt "#30019"
-msgid "TAG-GEN: Writing tag: " 
-msgstr "TAG-GEN: Writing tag: " 
+msgid "TAG-GEN: Writing tag: "
+msgstr "TAG-GEN: Writing tag: "
 
 msgctxt "#30020"
 msgid " to Trakt movie: "
 msgstr " to Trakt movie: "
 
 msgctxt "#30021"
-msgid "TAG-GEN: Not writing tag: " 
-msgstr "TAG-GEN: Not writing tag: " 
+msgid "TAG-GEN: Not writing tag: "
+msgstr "TAG-GEN: Not writing tag: "
 
 msgctxt "#30022"
-msgid " to movie: " 
-msgstr " to movie: " 
+msgid " to movie: "
+msgstr " to movie: "
 
 msgctxt "#30023"
 msgid " with existing tag: "
@@ -148,7 +148,7 @@ msgctxt "#30032"
 msgid "TAG-GEN: Writing tag: "
 msgstr "TAG-GEN: Writing tag: "
 
-msgctxt "#30033" 
+msgctxt "#30033"
 msgid " to IMDB movie: "
 msgstr " to IMDB movie: "
 
@@ -176,9 +176,9 @@ msgctxt "#30039"
 msgid "TAG-GEN: Not writing tag: "
 msgstr "TAG-GEN: Not writing tag: "
 
-msgctxt "#30040" 
-msgid " to movie: " 
-msgstr " to movie: " 
+msgctxt "#30040"
+msgid " to movie: "
+msgstr " to movie: "
 
 msgctxt "#30041"
 msgid " with existing tag: "
@@ -221,8 +221,8 @@ msgid "Scanning for local matches to Wikipedia comedians..."
 msgstr "Scanning for local matches to Wikipedia comedians..."
 
 msgctxt "#30051"
-msgid "TAG-GEN: Match found for comedian: " 
-msgstr "TAG-GEN: Match found for comedian: " 
+msgid "TAG-GEN: Match found for comedian: "
+msgstr "TAG-GEN: Match found for comedian: "
 
 msgctxt "#30052"
 msgid " in feature: "
@@ -236,7 +236,7 @@ msgctxt "#30054"
 msgid "Writing tag '"
 msgstr "Writing tag '"
 
-msgctxt "#30055" 
+msgctxt "#30055"
 msgid "' to "
 msgstr "' to "
 
@@ -385,11 +385,11 @@ msgid "Found list "
 msgstr "Found list "
 
 msgctxt "#30092"
-msgid " with slug " 
-msgstr " with slug " 
+msgid " with slug "
+msgstr " with slug "
 
 msgctxt "#30093"
-msgid "Finished wiping tags." 
+msgid "Finished wiping tags."
 msgstr "Finished wiping tags."
 
 msgctxt "#30900"
@@ -451,6 +451,10 @@ msgstr "Write IMDB Tags"
 msgctxt "#30914"
 msgid "Write Stand-Up Tags"
 msgstr "Write Stand-Up Tags"
+
+msgctxt "#30931"
+msgid "Write Oscar Award Tags"
+msgstr "Write Oscar Award Tags"
 
 msgctxt "#30915"
 msgid "Write All Tags"
@@ -515,3 +519,143 @@ msgstr "Trakt Username"
 msgctxt "#30930"
 msgid " movies"
 msgstr " movies"
+
+msgctxt "#33046"
+msgid "Scraping Wikipedia for oscar nominees..."
+msgstr "Scraping Wikipedia for oscar nominees..."
+
+msgctxt "#33047"
+msgid "TAG-GEN: Found oscar nominee: "
+msgstr "TAG-GEN: Found oscar nominee: "
+
+msgctxt "#33048"
+msgid " in Wiki URL: "
+msgstr " in Wiki URL: "
+
+msgctxt "#33049"
+msgid " contains no oscar nominees. Check URL and retry."
+msgstr " contains no oscar nominees. Check URL and retry."
+
+msgctxt "#33050"
+msgid "Scanning for local matches to Wikipedia oscar nominees..."
+msgstr "Scanning for local matches to Wikipedia oscar nominees..."
+
+msgctxt "#33051"
+msgid "TAG-GEN: Match found for oscar nominee: "
+msgstr "TAG-GEN: Match found for oscar nominee: "
+
+msgctxt "#33052"
+msgid " in feature: "
+msgstr " in feature: "
+
+msgctxt "#33054"
+msgid "Writing tag '"
+msgstr "Writing tag '"
+
+msgctxt "#33055"
+msgid "' to "
+msgstr "' to "
+
+msgctxt "#33056"
+msgid " oscar nominated features."
+msgstr " oscar nominted features."
+
+msgctxt "#33057"
+msgid "aquiring links nominated in relevant academy awards "
+msgstr "aquiring links nominated in relevant academy awards "
+
+msgctxt "#33058"
+msgid " oscar nominated films."
+msgstr " oscar nominated films."
+
+msgctxt "#33059"
+msgid "TAG-GEN: No match found for this oscar nominated film: "
+msgstr "TAG-GEN: No match found for this oscar nominated film: "
+
+msgctxt "#33060"
+msgid " in feature: "
+msgstr " in feature: "
+
+msgctxt "#33061"
+msgid " with existing tag: "
+msgstr " with existing tag: "
+
+msgctxt "#33063"
+msgid "TAG-GEN: Starting scraped tag generation."
+msgstr "TAG-GEN: Starting scraped tag generation."
+
+msgctxt "#33064"
+msgid "Number of ceremonies to search: "
+msgstr "Number of ceremonies to search: "
+
+msgctxt "#33065"
+msgid "scraping each award ceremony page for awards, nominees and nominee urls"
+msgstr "scraping each award ceremony page for awards, nominees and nominee urls"
+
+msgctxt "#33066"
+msgid "wiki url: "
+msgstr "wiki url: "
+
+msgctxt "#33067"
+msgid "progress: "
+msgstr "progress: "
+
+msgctxt "#33068"
+msgid "wiki url failed: "
+msgstr "wiki url failed: "
+
+msgctxt "#33069"
+msgid "creating set of links"
+msgstr "creating set of links"
+
+msgctxt "#33070"
+msgid " keys"
+msgstr " keys"
+
+msgctxt "#33071"
+msgid "unique url set created"
+msgstr "unique url set created"
+
+msgctxt "#33072"
+msgid "finding imdb ids"
+msgstr "finding imdb ids"
+
+msgctxt "#33073"
+msgid "TAG-GEN: Starting oscar tag writing."
+msgstr "TAG-GEN: Starting oscar tag writing."
+
+msgctxt "#33074"
+msgid "url: "
+msgstr "url: "
+
+msgctxt "#33075"
+msgid "creating imdb set"
+msgstr "creating imdb set"
+
+msgctxt "#33076"
+msgid "comparing to library"
+msgstr "comparing to library"
+
+msgctxt "#33077"
+msgid "comparing academy nominated films to library "
+msgstr "comparing academy nominated films to library "
+
+msgctxt "#33078"
+msgid "imdbid: "
+msgstr "imdbid: "
+
+msgctxt "#33079"
+msgid "TAG-GEN: Skipping oscars tag writing."
+msgstr "TAG-GEN: Skipping oscars tag writing."
+
+msgctxt "#33080"
+msgid "cataloging every distinct year in library"
+msgstr "cataloging every distinct year in library"
+
+msgctxt "#33081"
+msgid "failure to log year of film"
+msgstr "failure to log year of film"
+
+msgctxt "#33082"
+msgid "failure to log years of medialist"
+msgstr "failure to log years of medialist"

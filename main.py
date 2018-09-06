@@ -387,6 +387,8 @@ def find_academy_ceremonies(academy_ceremony_url_list, year_set):
             else:
                 if len(sys.argv) == 2:
                     xbmcgui.Dialog().ok("Tag Generator", "list lengths are different. now you got a lawsuit in your hands...")
+                    debuglog("list lengths are different. now you got a lawsuit in your hands...")
+                    sys.exit("list lengths are different. now you got a lawsuit in your hands...")
             # create new list with only relevent ceremonies
             # loop. for every relevent year add potential ceremony url to url_list_relevent
             url_set_relevant = set()
@@ -394,7 +396,7 @@ def find_academy_ceremonies(academy_ceremony_url_list, year_set):
                 ifcancel()
                 list_of_relevant_years = []
                 # for possibly relevant ceremonies for movies in said year
-                for i in xrange(3):
+                for i in xrange(2):
                     new_year = str(int(year) + i)
                     # if new year in year_url_dict then append
                     if new_year in year_url_dict:
@@ -433,9 +435,15 @@ def get_years(Medialist):
             except:
                 if len(sys.argv) == 2:
                     pDialog.update(percent, _getstr(33081), _getstr(33067) + str(counter) + "/" + str(len(Medialist)), "")
+                    debuglog(_getstr(33081) + "\n" + _getstr(33067) + str(counter) + "/" + str(len(Medialist)))
     except:
         if len(sys.argv) == 2:
-            pDialog.update("Tag Generator", _getstr(33082))
+            pDialog.update(_getstr(33082))
+            debuglog(_getstr(33082))
+    # if set empty
+    if len(year_set) <= 0:
+        year_set = list(range(1929, datetime.datetime.now().year))
+    # return
     return year_set
 
 # Scrapes wikipedia for characteristics/awards and returns movies with tag info
@@ -448,8 +456,6 @@ def scrapewiki_oscars(source_url_list, Medialist):
         debuglog(_getstr(33046))
     # aquire list of years in library
     year_set = get_years(Medialist)
-    if len(year_set) <=0:
-        year_set = list(range(1929, datetime.datetime.now().year))
     # update gui
     if len(sys.argv) == 2:
         pDialog.update(0,_getstr(33057), _getstr(33064) + " " + str(len(year_set)), " ")
@@ -501,7 +507,7 @@ def scrapewiki_oscars(source_url_list, Medialist):
                                             if i_a_href not in url_list:
                                                 url_list.append(i_a_href)
                                 # convert html special characters into unicode
-                                key = ceremony_name + ": " + category_title
+                                key = ceremony_name + " Oscars: " + category_title + " "
                                 wiki_url_dict[key] = url_list
             except:
                 if len(sys.argv) == 2:
@@ -571,70 +577,73 @@ def scrapewiki_oscars(source_url_list, Medialist):
 def write_tags_from_dict(dict_of_tag_and_imdbids, unique_imdbs, Medialist, newwikitag):
     # update gui
     if len(sys.argv) == 2:
+        # ok = xbmcgui.Dialog().ok("Tag Generator", "starting to write")
         pDialog.update (0,_getstr(33050)," "," ")
-    # vars
-    matches = 0
-    moviematches = 0
-    counter = 0
-    imdbid_matches = []
-    # cancel script?
-    ifcancel()
-    # for each movie in library
-    for movie in Medialist:
-        # iterate counter
-        moviematch = 0
-        counter = counter + 1
-        percent = (100 * int(counter) / int(len(Medialist)))
-        if len(sys.argv) == 2:
-            pDialog.update(percent, _getstr(33076), " ", " ")
-        # name, id, imdb id, tag
-        xbmcname = (json.dumps(movie.get('name','')))
-        xbmcid = (json.dumps(movie.get('xbmcid','')))
-        xbmc_imdbid = (json.dumps(movie.get('imdbid','')))
-        xbmctag = (json.dumps(movie.get('tag','')))
-        # if len of imdbid > 5
-        if len(xbmc_imdbid) > 5:
-            # if imdbid is in unique imdb set then loop through tags
-            if xbmc_imdbid in unique_imdbs:
-                # counter_tags = 0
-                # for tag in dict_of_tag_and_imdbids
-                for tag in dict_of_tag_and_imdbids:
-                    # cancel script?
-                    ifcancel()
-                    # if nonempty tag
-                    if len(tag) > 3:
-                        # for each imdbid in list of imdbids for current tag
-                        counter_id = 0
-                        list_of_imdbids = dict_of_tag_and_imdbids[tag]
-                        for imdbid in list_of_imdbids:
-                            # convert to string
-                            xbmctag_str = ''.join(xbmctag)
-                            xbmc_imdbid_str = re.sub('[^a-z0-9 \n\.]', '', xbmc_imdbid)
-                            # if movie name and tag match local to imdb
-                            if (imdbid == xbmc_imdbid_str):# and (tag not in xbmctag):
-                                # iterate oscarmatches & log & xbmc tag & percentage completed
-                                matches = matches + 1
-                                if moviematch == 0:
-                                    moviematch += 1;
-                                if imdbid not in imdbid_matches:
-                                    imdbid_matches.append(imdbid)
-                                    moviematches += 1;
-                                if len(sys.argv) == 2:
-                                    pDialog.update (percent,"",_getstr(33077), str(counter) + "/" + str(len(Medialist)))
-                                    debuglog(_getstr(33051) + imdbid + _getstr(33052) + xbmcname + _getstr(33053))
-                                # if imdbid matches to first in list_of_imdbids then it was the winner of this catagory
-                                if imdbid == list_of_imdbids[0]:
-                                    tag = tag + " Winner"
-                                # write tag
-                                writetags(xbmcid, tag, xbmctag)
-                            # else. imdbid is not a match (most common case)
-                            else:
-                                # update percentage & log
-                                percent = (100 * int(counter) / int(len(Medialist)))
-                                debuglog(_getstr(33059) + _getstr(33060) + xbmcname + _getstr(33061) + xbmctag)
-                                # update gui
-                                if len(sys.argv) == 2:
-                                    pDialog.update (percent,"",_getstr(33077), str(counter) + "/" + str(len(Medialist)))
+    try:
+        # vars
+        matches = 0
+        moviematches = 0
+        counter = 0
+        imdbid_matches = []
+        # cancel script?
+        ifcancel()
+        # for each movie in library
+        for movie in Medialist:
+            # iterate counter
+            moviematch = 0
+            counter = counter + 1
+            percent = (100 * int(counter) / int(len(Medialist)))
+            if len(sys.argv) == 2:
+                pDialog.update(percent, _getstr(33076), " ", " ")
+            # name, id, imdb id, tag
+            xbmcname = (json.dumps(movie.get('name','')))
+            xbmcid = (json.dumps(movie.get('xbmcid','')))
+            xbmc_imdbid = (json.dumps(movie.get('imdbid','')))
+            xbmctag = (json.dumps(movie.get('tag','')))
+            # convert to string
+            xbmc_imdbid_str = re.sub('[^a-z0-9\.]', '', xbmc_imdbid)
+            xbmctag_str = ''.join(xbmctag)
+            # if len of imdbid is 9
+            if len(xbmc_imdbid_str) == 9:
+                # if imdbid is in unique imdb set then loop through tags
+                if xbmc_imdbid_str in unique_imdbs:
+                    # for tag in dict_of_tag_and_imdbids
+                    for tag in dict_of_tag_and_imdbids:
+                        # cancel script?
+                        ifcancel()
+                        # if nonempty tag
+                        if len(tag) > 3:
+                            # for each imdbid in list of imdbids for current tag
+                            counter_id = 0
+                            list_of_imdbids = dict_of_tag_and_imdbids[tag]
+                            for imdbid in list_of_imdbids:
+                                # if movie name and tag match local to imdb
+                                if (imdbid == xbmc_imdbid_str) and (tag not in xbmctag):
+                                    # iterate oscarmatches & log & xbmc tag & percentage completed
+                                    matches = matches + 1
+                                    if moviematch == 0:
+                                        moviematch += 1;
+                                    if imdbid not in imdbid_matches:
+                                        imdbid_matches.append(imdbid)
+                                        moviematches += 1;
+                                    if len(sys.argv) == 2:
+                                        pDialog.update (percent,"",_getstr(33077), str(counter) + "/" + str(len(Medialist)))
+                                        debuglog(_getstr(33051) + imdbid + _getstr(33052) + xbmcname + _getstr(33053))
+                                    # if imdbid matches to first in list_of_imdbids then it was the winner of this catagory
+                                    if imdbid == list_of_imdbids[0]:
+                                        tag = tag + " Winner "
+                                    # write tag
+                                    writetags(xbmcid, tag, xbmctag)
+                                # else. imdbid is not a match (most common case)
+                                else:
+                                    # update percentage & log
+                                    percent = (100 * int(counter) / int(len(Medialist)))
+                                    debuglog(_getstr(33059) + _getstr(33060) + xbmcname + _getstr(33061) + xbmctag)
+                                    # update gui
+                                    if len(sys.argv) == 2:
+                                        pDialog.update (percent,"",_getstr(33077), str(counter) + "/" + str(len(Medialist)))
+    except:
+        ok = xbmcgui.Dialog().ok("Tag Generator", "write failed")
     return moviematches
 
 ###################################################################

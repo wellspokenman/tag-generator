@@ -405,8 +405,8 @@ msgid "Refresh Interval (hours)"
 msgstr "Refresh Interval (hours)"
 
 msgctxt "#30903"
-msgid "Set this tag in Kodi:"
-msgstr "Set this tag in Kodi:"
+msgid "Set standup tag in Kodi:"
+msgstr "Set standup tag in Kodi:"
 
 msgctxt "#30904"
 msgid "Stand-up Comedy"
@@ -659,3 +659,7 @@ msgstr "failure to log year of film"
 msgctxt "#33082"
 msgid "failure to log years of medialist"
 msgstr "failure to log years of medialist"
+
+msgctxt "#33903"
+msgid "Set oscars tag in Kodi:"
+msgstr "Set oscars tag in Kodi:"

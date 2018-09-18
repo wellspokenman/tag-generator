@@ -8,7 +8,7 @@
         <setting id="32015" type="bool" label="Write Stand-Up Tags" default="true"/>
         <setting label="30903" type="text" visible="eq(-1,true)" id="32016" default="Standup"/>
         <setting id="35015" type="bool" label="Write Oscar Tags" default="true"/>
-      	<setting label="33903" type="text" visible="eg(-1,true)" id="35016" default="Oscars"/>
+      	<setting label="33903" type="text" visible="eq(-1,true)" id="35016" default="Oscars"/>
     </category>
     <category label="IMDB">
         <setting id="32020" type="bool" label="Use IMDB" default="true"/>

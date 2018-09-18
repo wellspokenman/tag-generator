@@ -633,7 +633,7 @@ def write_tags_from_dict(dict_of_tag_and_imdbids, unique_imdbs, Medialist, newwi
                                     if imdbid == list_of_imdbids[0]:
                                         tag = tag + " Winner "
                                     # write tag
-                                    writetags(xbmcid, tag, xbmctag)
+                                    writetags(xbmcid, newwikitag, xbmctag)
                                 # else. imdbid is not a match (most common case)
                                 else:
                                     # update percentage & log
@@ -674,8 +674,8 @@ while not monitor.abortRequested():
     c_imdbtag = __settings__.getSetting(str(TAGID))
     c_standup = __settings__.getSetting("32015")
     c_standuptag = __settings__.getSetting("32016")
-    c_oscars = __settings__.getSetting("33000")
-    c_oscartag = __settings__.getSetting("33001")
+    c_oscars = __settings__.getSetting("35015")
+    c_oscartag = __settings__.getSetting("35016")
     c_plusurl = __settings__.getSetting("32013")
     c_minusurl = __settings__.getSetting("32014")
     c_urlcount =  __settings__.getSetting("32099")
@@ -769,14 +769,14 @@ while not monitor.abortRequested():
             xbmc.log(msg= _getstr(30073),level=xbmc.LOGNOTICE)
             # get 3 inputs as vars
             Medialist = getxbmcdb()
-            newwikitag = c_oscartag
+            newwikitag_oscars = c_oscartag
             ret = pDialog.create("Tag Generator", "Db Read. Attempting to scrape")
             # ok = dialog.ok("Tag Generator", "attempting to scrape oscar nominees")
             (oscar_nominees, unique_imdbs) = scrapewiki_oscars(wiki_oscar_url, Medialist)
             # ok = dialog.ok("Tag Generator", "successfully scraped oscar nominees")
             ret = pDialog.create("Tag Generator", "Scrape complete. Attempting to write tags")
             # nominee_count returned from write standup tags & update gui
-            nominee_count = write_tags_from_dict(oscar_nominees, unique_imdbs, Medialist, newwikitag)
+            nominee_count = write_tags_from_dict(oscar_nominees, unique_imdbs, Medialist, newwikitag_oscars)
             ret = pDialog.create("Tag Generator", "Success")
             # ok = xbmcgui.Dialog().ok("Tag Generator", "success? But at what cost.")
             # ok = dialog.ok("Tag Generator", _getstr(33081)+str(nominee_count)+_getstr(33083) + "oh geez")
@@ -869,10 +869,10 @@ while not monitor.abortRequested():
 #### Oscar tag writing ####
     if ("true" in c_oscars) and ("false" in wipeout):
         Medialist = getxbmcdb()
-        newwikitag = c_oscartag
+        newwikitag_oscars = c_oscartag
         xbmc.log(msg= _getstr(30073),level=xbmc.LOGNOTICE)
         (oscars, unique_imdbs) = scrapewiki_oscars(wiki_oscar_url, Medialist)
-        comiccount = write_tags_from_dict(oscars, unique_imdbs, Medialist, newwikitag)
+        comiccount = write_tags_from_dict(oscars, unique_imdbs, Medialist, newwikitag_oscars)
     else:
         xbmc.log(msg= _getstr(30079),level=xbmc.LOGNOTICE)
 

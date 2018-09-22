@@ -4,8 +4,7 @@ import xbmcgui
 import xbmcaddon
 import json
 import requests
-from bs4 import BeautifulSoup
-from BeautifulSoup import BeautifulStoneSoup
+import bs4
 try:
     import simplejson
     import trakt

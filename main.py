@@ -4,8 +4,7 @@ import xbmcgui
 import xbmcaddon
 import json
 import requests
-from bs4 import *
-from BeautifulSoup import BeautifulStoneSoup
+from bs4 import BeautifulSoup
 try:
     import simplejson
     import trakt
@@ -477,9 +476,9 @@ def scrapewiki_oscars(source_url_list, Medialist):
             page_soup = BeautifulSoup(page.text, 'html.parser')
             # pull all text from page_soup
             ceremony_name = page_soup.find("h1", "firstHeading").text
-            ceremony_name = unicode(BeautifulStoneSoup(ceremony_name, convertEntities=BeautifulStoneSoup.ALL_ENTITIES))
             # update gui
             if len(sys.argv) == 2:
+                ok = xbmcgui.Dialog().ok("Tag Generator", "ceremony name: " + ceremony_name)
                 pDialog.update(percent, _getstr(33065), _getstr(33066) + wikiurl, _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
                 debuglog(_getstr(33065) + " " + _getstr(33066) + wikiurl + _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
             # loop. iterate through each row in table

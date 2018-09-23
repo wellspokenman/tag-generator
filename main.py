@@ -478,7 +478,6 @@ def scrapewiki_oscars(source_url_list, Medialist):
             ceremony_name = page_soup.find("h1", "firstHeading").text
             # update gui
             if len(sys.argv) == 2:
-                ok = xbmcgui.Dialog().ok("Tag Generator", "ceremony name: " + ceremony_name)
                 pDialog.update(percent, _getstr(33065), _getstr(33066) + wikiurl, _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
                 debuglog(_getstr(33065) + " " + _getstr(33066) + wikiurl + _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
             # loop. iterate through each row in table

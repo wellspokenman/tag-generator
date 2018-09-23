@@ -4,7 +4,8 @@ import xbmcgui
 import xbmcaddon
 import json
 import requests
-import bs4
+from bs4 import *
+from BeautifulSoup import BeautifulStoneSoup
 try:
     import simplejson
     import trakt
@@ -427,7 +428,6 @@ def get_years(Medialist):
             try:
                 if len(sys.argv) == 2:
                     pDialog.update(percent, _getstr(33080), _getstr(33067) + str(counter) + "/" + str(len(Medialist)), "")
-                    debuglog(_getstr(33080) + "\n" +  _getstr(33067) + str(counter) + "/" + str(len(Medialist)))
                 # get year, add to set
                 xbmc_year = (json.dumps(movie.get('year','')))
                 year_set.add(xbmc_year)
@@ -460,115 +460,108 @@ def scrapewiki_oscars(source_url_list, Medialist):
         pDialog.update(0,_getstr(33057), _getstr(33064) + " " + str(len(year_set)), " ")
         debuglog(_getstr(33057) + " " + _getstr(33064) + " " + str(len(year_set)))
     # get all ceremony urls
-    try:
-        # find set of ceremonies to scape
-        url_set_ceremonies = find_academy_ceremonies(source_url_list, year_set)
-        # loop through each ceremony url
-        counter_url = 0
-        percent = 0
-        imdb_id_dict = {}
-        wiki_url_dict = {}
-        for wikiurl in url_set_ceremonies:
-            ifcancel()
-            try:
-                counter_url = counter_url + 1
-                percent = (100 * int(counter_url) / int(len(url_set_ceremonies)))
-                # BeautifulSoup
-                page = requests.get(wikiurl)
-                page_soup = BeautifulSoup(page.text, 'html.parser')
-                # pull all text from page_soup
-                ceremony_name = page_soup.find("h1", "firstHeading").text
-                ceremony_name = unicode(BeautifulStoneSoup(ceremony_name, convertEntities=BeautifulStoneSoup.ALL_ENTITIES))
-                # update gui
-                if len(sys.argv) == 2:
-                    pDialog.update(percent, _getstr(33065), _getstr(33066) + wikiurl, _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
-                    debuglog(_getstr(33065) + " " + _getstr(33066) + wikiurl + _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
-                # loop. iterate through each row in table
-                page_portion_list = []
-                page_portion_list.append(page_soup.find("table", "wikitable"))
-                i_list = []
-                for page_portion in page_portion_list:
-                    if page_portion is not None:
-                        # find category name and nominees
-                        for table_cell in page_portion.find_all('tr'):
-                            # first link -> category name
-                            table_cell_a = table_cell.find('a')
-                            if table_cell_a is not None:
-                                category_title = table_cell_a.get('title')
-                                # for each list item. cature all movie elements
-                                url_list = []
-                                for i in table_cell.find_all('i'):
-                                    # for each catagory nominee element
-                                    for i_a in i.find_all('a'):
-                                        if i_a is not None:
-                                            i_a_href = i_a.get('href')
-                                            # append url to url_list
-                                            if i_a_href not in url_list:
-                                                url_list.append(i_a_href)
-                                # convert html special characters into unicode
-                                key = ceremony_name + " Oscars: " + category_title + " "
-                                wiki_url_dict[key] = url_list
-            except:
-                if len(sys.argv) == 2:
-                    pDialog.update(0, _getstr(30000), wikiurl + _getstr(33049))
-                    xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
-        if len(sys.argv) == 2:
-            pDialog.update(0, _getstr(33069), " ", " ")
-            debuglog(_getstr(33069))
-        # create list of all unique urls
-        unique_urls = set()
-        counter_unique = 0
-        percent_unique = 0
-        for each_key in wiki_url_dict:
-            counter_unique = counter_unique + 1
-            percent_unique = (100 * int(counter_unique) / int(len(wiki_url_dict)))
-            # loop through each url in each list associated with each_key. add each url
+    # find set of ceremonies to scape
+    url_set_ceremonies = find_academy_ceremonies(source_url_list, year_set)
+    # loop through each ceremony url
+    counter_url = 0
+    percent = 0
+    imdb_id_dict = {}
+    wiki_url_dict = {}
+    for wikiurl in url_set_ceremonies:
+        ifcancel()
+        try:
+            counter_url = counter_url + 1
+            percent = (100 * int(counter_url) / int(len(url_set_ceremonies)))
+            # BeautifulSoup
+            page = requests.get(wikiurl)
+            page_soup = BeautifulSoup(page.text, 'html.parser')
+            # pull all text from page_soup
+            ceremony_name = page_soup.find("h1", "firstHeading").text
+            ceremony_name = unicode(BeautifulStoneSoup(ceremony_name, convertEntities=BeautifulStoneSoup.ALL_ENTITIES))
+            # update gui
             if len(sys.argv) == 2:
-                pDialog.update(percent_unique, str(counter_unique) + "/" + str(len(wiki_url_dict)) + _getstr(33070))
-            for each_url in wiki_url_dict[each_key]:
-                unique_urls.add(each_url)
-        if len(sys.argv) == 2:
-            pDialog.update(0, _getstr(33071), "", "")
-            debuglog(_getstr(33071))
-        # create dictionary from unique_urls set. to be referenced when creating a larger dict proportional to wiki_url_dict
-        percent = 0
-        counter = 0
-        unique_url_imdb_pair = {}
-        for each_url in unique_urls:
-            counter = counter + 1
-            percent = (100 * int(counter) / int(len(unique_urls)))
+                pDialog.update(percent, _getstr(33065), _getstr(33066) + wikiurl, _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
+                debuglog(_getstr(33065) + " " + _getstr(33066) + wikiurl + _getstr(33067) + str(counter_url) + "/" + str(len(url_set_ceremonies)))
+            # loop. iterate through each row in table
+            page_portion_list = []
+            page_portion_list.append(page_soup.find("table", "wikitable"))
+            i_list = []
+            for page_portion in page_portion_list:
+                if page_portion is not None:
+                    # find category name and nominees
+                    for table_cell in page_portion.find_all('tr'):
+                        # first link -> category name
+                        table_cell_a = table_cell.find('a')
+                        if table_cell_a is not None:
+                            category_title = table_cell_a.get('title')
+                            # for each list item. cature all movie elements
+                            url_list = []
+                            for i in table_cell.find_all('i'):
+                                # for each catagory nominee element
+                                for i_a in i.find_all('a'):
+                                    if i_a is not None:
+                                        i_a_href = i_a.get('href')
+                                        # append url to url_list
+                                        if i_a_href not in url_list:
+                                            url_list.append(i_a_href)
+                            # convert html special characters into unicode
+                            key = ceremony_name + " Oscars: " + category_title + " "
+                            wiki_url_dict[key] = url_list
+        except:
             if len(sys.argv) == 2:
-                pDialog.update(percent, _getstr(33072), _getstr(33074) + each_url, " ")
-            # extract imdb id from url and add to dictionary
-            imdb_id = find_imdb_id(each_url)
-            if len(imdb_id) > 3:
-                unique_url_imdb_pair[each_url] = imdb_id
+                pDialog.update(0, _getstr(30000), wikiurl + _getstr(33049))
+                xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
+    if len(sys.argv) == 2:
+        pDialog.update(0, _getstr(33069), " ", " ")
+        debuglog(_getstr(33069))
+    # create list of all unique urls
+    unique_urls = set()
+    counter_unique = 0
+    percent_unique = 0
+    for each_key in wiki_url_dict:
+        counter_unique = counter_unique + 1
+        percent_unique = (100 * int(counter_unique) / int(len(wiki_url_dict)))
+        # loop through each url in each list associated with each_key. add each url
+        if len(sys.argv) == 2:
+            pDialog.update(percent_unique, str(counter_unique) + "/" + str(len(wiki_url_dict)) + _getstr(33070))
+        for each_url in wiki_url_dict[each_key]:
+            unique_urls.add(each_url)
+    if len(sys.argv) == 2:
+        pDialog.update(0, _getstr(33071), "", "")
+        debuglog(_getstr(33071))
+    # create dictionary from unique_urls set. to be referenced when creating a larger dict proportional to wiki_url_dict
+    percent = 0
+    counter = 0
+    unique_url_imdb_pair = {}
+    for each_url in unique_urls:
+        counter = counter + 1
+        percent = (100 * int(counter) / int(len(unique_urls)))
+        if len(sys.argv) == 2:
+            pDialog.update(percent, _getstr(33072), _getstr(33074) + each_url, " ")
+        # extract imdb id from url and add to dictionary
+        imdb_id = find_imdb_id(each_url)
+        if len(imdb_id) > 3:
+            unique_url_imdb_pair[each_url] = imdb_id
+    if len(sys.argv) == 2:
+        pDialog.update(percent, _getstr(33075), " ", " ")
+        debuglog(_getstr(33075))
+    # loop through each key in wiki_url_dict and replace url list with imdb id list
+    unique_imdbs = set()
+    percent = 0
+    counter = 0
+    for each_key in wiki_url_dict:
+        counter = counter + 1
+        percent = (100 * int(counter) / int(len(unique_urls)))
         if len(sys.argv) == 2:
             pDialog.update(percent, _getstr(33075), " ", " ")
-            debuglog(_getstr(33075))
-        # loop through each key in wiki_url_dict and replace url list with imdb id list
-        unique_imdbs = set()
-        percent = 0
-        counter = 0
-        for each_key in wiki_url_dict:
-            counter = counter + 1
-            percent = (100 * int(counter) / int(len(unique_urls)))
-            if len(sys.argv) == 2:
-                pDialog.update(percent, _getstr(33075), " ", " ")
-            # loop through each url in wiki_url_dict[each tag] (list). append to corresponding list in imdb_id_dict
-            imdb_id_dict[each_key] = []
-            for each_url in wiki_url_dict[each_key]:
-                if each_url in unique_url_imdb_pair:
-                    imdb_id = unique_url_imdb_pair[each_url]
-                    imdb_id_dict[each_key].append(imdb_id)
-                    # add to unique imdbs set
-                    unique_imdbs.add(imdb_id)
-    except:
-        # update gui & log & exit
-        if len(sys.argv) == 2:
-            pDialog.update(0, _getstr(30000), wikiurl + _getstr(33049))
-            xbmc.log(msg= "TAG-GEN: " + wikiurl + _getstr(33049),level=xbmc.LOGNOTICE)
-            # sys.exit(wikiurl + _getstr(33049))
+        # loop through each url in wiki_url_dict[each tag] (list). append to corresponding list in imdb_id_dict
+        imdb_id_dict[each_key] = []
+        for each_url in wiki_url_dict[each_key]:
+            if each_url in unique_url_imdb_pair:
+                imdb_id = unique_url_imdb_pair[each_url]
+                imdb_id_dict[each_key].append(imdb_id)
+                # add to unique imdbs set
+                unique_imdbs.add(imdb_id)
     # return
     return imdb_id_dict, unique_imdbs
 

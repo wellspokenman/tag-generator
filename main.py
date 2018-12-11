@@ -52,7 +52,7 @@ if len(sys.argv) != 2:
 #test for interwebs
 def internet_test(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=5)
         return True
     except Exception as e:
         pass
@@ -173,8 +173,7 @@ def get_trakt_movies(user_name, list_name, token):
         imdb_id = item.ids["ids"]["imdb"]
         if not imdb_id in found_ids:
             found_ids.append(imdb_id)
-            debuglog("TAG-GEN: Found Trakt movie " +
-                     (str(item)) + " in Trakt List: " + list_name)
+            debuglog("TAG-GEN: Found Trakt movie " + (str(item)) + " in Trakt List: " + list_name)
     return found_ids
 
 
@@ -680,6 +679,7 @@ while not monitor.abortRequested():
     xbmc.log(msg="TAG-GEN: Starting tag generation.", level=xbmc.LOGNOTICE)
     URLID=32050
     TAGID=32080
+    oscarcount = 0
     comiccount = 0
     moviecount = 0
     c_imdburl = __settings__.getSetting(str(URLID))
@@ -829,31 +829,22 @@ while not monitor.abortRequested():
                     xbmc.log(msg="TAG-GEN: Could not retrieve movies from Trakt API.", level=xbmc.LOGERROR)
                 i += 1
             dialog = xbmcgui.Dialog()
-            ok = dialog.ok("Tag Generator", _getstr(30031)+str(moviecount)+_getstr(30003))
+            ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30003))
             xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
             sys.exit(0)
         elif sys.argv[1] == "oscars":
-            # gui. show progress & log
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg=_getstr(30073), level=xbmc.LOGNOTICE)
-            # get 3 inputs as vars
+            xbmc.log(msg="TAG-GEN: Starting oscar tag writing.", level=xbmc.LOGNOTICE)
             medialist = getxbmcdb()
             newwikitag_oscars = c_oscartag
-            #ret = pDialog.create("Tag Generator", "Db Read. Attempting to scrape")
-            # ok = dialog.ok("Tag Generator", "attempting to scrape oscar nominees")
             (oscar_nominees, unique_imdbs) = scrapewiki_oscars(wiki_oscar_url, medialist)
-            # ok = dialog.ok("Tag Generator", "successfully scraped oscar nominees")
-            #ret = pDialog.create("Tag Generator", "Scrape complete. Attempting to write tags")
-            # nominee_count returned from write standup tags & update gui
             nominee_count = write_tags_from_dict(oscar_nominees, unique_imdbs, medialist, newwikitag_oscars)
-            #ret = pDialog.create("Tag Generator", "Success")
-            # ok = xbmcgui.Dialog().ok("Tag Generator", "success? But at what cost.")
-            # ok = dialog.ok("Tag Generator", _getstr(33081)+str(nominee_count)+_getstr(33083) + "oh geez")
+            ok = dialog.ok("Tag Generator", _getstr(30031) + str(nominee_count) + _getstr(33056))
             xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
             sys.exit(0)
         else:
-            xbmc.log(msg="TAG-GEN: No valid arguments supplied.",level=xbmc.LOGERROR)
+            xbmc.log(msg="TAG-GEN: No valid arguments supplied.", level=xbmc.LOGERROR)
             sys.exit(1)
 
             
@@ -913,14 +904,15 @@ while not monitor.abortRequested():
         newwikitag_oscars = c_oscartag
         xbmc.log("TAG-GEN: Starting oscar tag writing.", level=xbmc.LOGNOTICE)
         (oscars, unique_imdbs) = scrapewiki_oscars(wiki_oscar_url, medialist)
-        comiccount = write_tags_from_dict(oscars, unique_imdbs, medialist, newwikitag_oscars)
+        oscarcount = write_tags_from_dict(oscars, unique_imdbs, medialist, newwikitag_oscars)
     else:
         xbmc.log(msg="TAG-GEN: Skipping oscar tag writing.", level=xbmc.LOGNOTICE)
 
     if "true" in manual:
         dialog = xbmcgui.Dialog()
-        ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30032) + str(comiccount)+_getstr(30033))
-        xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.",level=xbmc.LOGNOTICE)
+        ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30032) + str(comiccount)
+                       + _getstr(30033) + str(oscarcount) + _getstr(30040))
+        xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
         sys.exit(0)
    
     elif "true" in wipeout:

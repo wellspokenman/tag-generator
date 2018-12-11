@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.tag-generator"
        name="Tag Generator"
-       version="0.6.0"
+       version="0.6.1"
        provider-name="wellspokenman">
   <requires>
     <import addon="xbmc.python" version="2.25.0"/>
@@ -24,7 +24,7 @@
 	<source>https://github.com/wellspokenman/tag-generator</source>
 	<email></email>
     <news>
-    v0.6 (December 10th, 2018)
+    v0.6.1 (December 10th, 2018)
     - Added Oscar nominee tagging (courtesy of Jorge: https://github.com/bluesauce)
     - Updated regex to support IMDb lists of all types (Top250, Academy Awards, Sundance etc)
     - Added notifications (can be disabled in Settings)

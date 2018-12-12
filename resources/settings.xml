@@ -8,6 +8,8 @@
         <setting label="30903" id="32016" type="text" visible="eq(-1,true)" default="Standup"/>
         <setting type="sep"/>
         <setting label="30930" id="32021" type="bool" default="false"/>
+        <setting label="30933" id="32024" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting label="30934" id="32025" type="bool" visible="eq(-2,true)" default="false"/>
         <setting type="sep"/>
         <setting label="30931" id="32019" type="bool" default="true"/>
         <setting label="30932" id="32030" type="bool" default="false"/>

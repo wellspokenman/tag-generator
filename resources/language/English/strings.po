@@ -170,11 +170,11 @@ msgstr "tagging Trakt movies"
 
 msgctxt "#30038"
 msgid "tagging stand-up features"
-msgstr "tagging stand-up features."
+msgstr "tagging stand-up features"
 
 msgctxt "#30039"
-msgid "tagging movie awards."
-msgstr "tagging movie awards."
+msgid "tagging movie awards"
+msgstr "tagging movie awards"
 
 msgctxt "#30040"
 msgid " award winning/nominated movies."
@@ -187,6 +187,10 @@ msgstr "Searching for award winning/nominated movies."
 msgctxt "#30042"
 msgid "Writing awards tags to: "
 msgstr "Writing awards tags to: "
+
+msgctxt "#30043"
+msgid "Error: please choose at least one awards category."
+msgstr "Error: please choose at least one awards category."
 
 msgctxt "#30900"
 msgid "Settings"
@@ -285,8 +289,8 @@ msgid "Trakt Username"
 msgstr "Trakt Username"
 
 msgctxt "#30930"
-msgid "Write Oscar Tags"
-msgstr "Write Oscar Tags"
+msgid "Write Awards Tags"
+msgstr "Write Awards Tags"
 
 msgctxt "#30931"
 msgid "Notifications"
@@ -295,3 +299,11 @@ msgstr "Notifications"
 msgctxt "#30932"
 msgid "Debug Mode"
 msgstr "Debug Mode"
+
+msgctxt "#30933"
+msgid "Oscar Winners"
+msgstr "Oscar Winners"
+
+msgctxt "#30934"
+msgid "Oscar Nominees"
+msgstr "Oscar Nominees"

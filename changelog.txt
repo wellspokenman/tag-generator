@@ -1,4 +1,4 @@
-v0.6 (December 10th, 2018)
+v0.6 (December 12th, 2018)
 - Added Oscar award/nominee tagging (inspired by Jorge: https://github.com/bluesauce)
 - Updated regex to support IMDb lists of all types (Top250, Academy Awards, Sundance etc)
 - Added notifications (can be disabled in Settings)

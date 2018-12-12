@@ -33,7 +33,7 @@ except ImportError:
 __settings__ = xbmcaddon.Addon()
 __language__ = __settings__.getLocalizedString
 c_refresh = __settings__.getSetting("32012")
-c_runasservice = __settings__.getSetting("32011")
+c_runasservice = json.loads(__settings__.getSetting("32011"))
 start_time = datetime.datetime.now()
 service_interval = int(c_refresh)*360  # seconds
 micronap = 500  # milliseconds
@@ -49,7 +49,7 @@ if len(sys.argv) != 2:
 ###################################################################
 ############################ FUNCTIONS ############################
 ###################################################################
-#test for interwebs
+# test for interwebs
 def internet_test(url):
     try:
         response = requests.get(url, timeout=5)
@@ -73,13 +73,13 @@ def ifcancel():
 
 #def to make a debug log
 def debuglog(string):
-    if "true" in c_debug:
-        xbmc.log(msg=string,level=xbmc.LOGNOTICE)
+    if c_debug:
+        xbmc.log(msg=string, level=xbmc.LOGNOTICE)
 
 
 def notify(input):
     icon = os.path.abspath(os.path.dirname(__file__)) + slash + 'icon.png'
-    xbmc.executebuiltin("Notification(Tag Generator," + str(input) + ",5," + icon + ")")
+    xbmc.executebuiltin("Notification(Tag Generator," + str(input) + ",2500," + icon + ")")
 
 
 # A function to overwrite EVERY tag found in the database with a blank [] tag.    
@@ -103,7 +103,7 @@ def wipealltags():
 
 # dump the entire XBMC library to a big fat python list of dicts
 def getxbmcdb():
-    if "true" in wipeout:
+    if wipeout:
         pDialog.update(0, _getstr(30004), " ", " ")
     elif len(sys.argv) == 2:
         pDialog.update(0, _getstr(30005), " ", " ")
@@ -116,7 +116,7 @@ def getxbmcdb():
     # create media list
     medialist = []
     # if json has key == movies
-    if jsonobject['result'].has_key('movies'):
+    if 'movies' in jsonobject['result']:
         # for each movie in json
         for item in jsonobject['result']['movies']:
             ifcancel()
@@ -129,7 +129,7 @@ def getxbmcdb():
 # write tags for locally found movies given a Trakt watchlist, local media list and the new tag to write
 def write_trakt_tags(traktlist, medialist, newtrakttag):
     if len(sys.argv) == 2:
-        pDialog.update(0,_getstr(30006), " ", " ")
+        pDialog.update(0, _getstr(30006), " ", " ")
     moviecount = 0
     counter = 0
     for traktimdbid in traktlist:
@@ -163,7 +163,6 @@ def get_trakt_movies(user_name, list_name, token):
     trakt.core.OAUTH_TOKEN = token
     trakt.core.CLIENT_ID = trakt_client_id
     trakt.core.CLIENT_SECRET = trakt_client_secret
-    target_list = list()
     if list_name.lower() == "watchlist":
         target_list = users.User(user_name).watchlist_movies
     else:
@@ -197,7 +196,7 @@ def writetags(xbmcid, newtag, xbmctag):
     jsonresponse = simplejson.loads(xbmc.executeJSONRPC(jsonurl))
 
 
-# Scrapes IMDB given a URL and a scrape count (counter for how many times it has run)
+# Scrapes IMDb given a URL and a scrape count (counter for how many times it has run)
 def scrapeimdb(imdburl, scrapecount):
     internet_test("http://www.imdb.com")
     if len(sys.argv) == 2:
@@ -239,9 +238,7 @@ def writeimdbtags(imdblist, medialist, newimdbtag):
             xbmcname = (json.dumps(movie.get('name', '')))
             if (webimdbid in xbmcimdbid) and (newimdbtag not in xbmctag):
                 moviecount = moviecount + 1
-                debuglog("TAG-GEN: Writing tag: " + newimdbtag +
-                         " to IMDB movie: " + xbmcname +
-                         " from " + str(imdbuser))
+                debuglog("TAG-GEN: Writing tag: " + newimdbtag + " to IMDb movie: " + xbmcname + " from " + str(imdbuser))
                 percent = (100 * int(counter) / int(len(imdblist)))
                 if len(sys.argv) == 2:
                     pDialog.update(percent, "", "", _getstr(30014) + str(newimdbtag) + _getstr(30015) + str(moviecount)
@@ -253,7 +250,7 @@ def writeimdbtags(imdblist, medialist, newimdbtag):
                          " to movie: " + xbmcname + " with existing tag: " +
                          xbmctag + " from " + str(imdbuser))
             if len(sys.argv) == 2:
-                pDialog.update(percent,"",_getstr(30017) + str(counter) + "/" + str(len(imdblist)) + _getstr(30018))
+                pDialog.update(percent, "", _getstr(30017) + str(counter) + "/" + str(len(imdblist)) + _getstr(30018))
     debuglog(str(imdblist))
     return moviecount
 
@@ -322,8 +319,8 @@ def writestanduptags(comiclist, medialist, newwikitag):
 
 
 # use the imdb awards pages for each title to create tags for each Oscar award and nomination.
-def write_award_tags(medialist):
-    imdburl = 'https://www.imdb.com/title/'
+def write_award_tags(medialist, tag_winners, tag_nominees):
+    imdburl = 'https://www.imdb.com'
     internet_test(imdburl)
     if len(sys.argv) == 2:
         pDialog.update(0, _getstr(30041), " ", " ")
@@ -339,7 +336,7 @@ def write_award_tags(medialist):
         xbmcid = (json.dumps(movie.get('xbmcid', '')))
         xbmctag = (json.dumps(movie.get('tag', '')))
         imdbid = (json.dumps(movie.get('imdbid', '')))[1:-1]
-        page = requests.get(imdburl + imdbid + '/awards')
+        page = requests.get(imdburl + '/title/' + imdbid + '/awards')
         page_soup = BeautifulSoup(page.text, "html.parser")
         page_portion = page_soup.find("body")
         awards = []
@@ -354,9 +351,13 @@ def write_award_tags(medialist):
                         j = 0
                         for td in table.find_all("td", "title_award_outcome"):
                             for i in range(int(td['rowspan'])):
-                                found_award = 'Oscar ' + td.b.contents[0].encode('utf-8') + ': ' + award_descriptions[j]
+                                award_type = td.b.contents[0].encode('utf-8')
+                                found_award = 'Oscar ' + award_type + ': ' + award_descriptions[j]
                                 # new awards only, and skip 'special achievements', which will be 0 len
-                                if found_award not in json.loads(xbmctag) and len(award_descriptions[j]) > 0:
+                                # write winners and nominees according to settings
+                                if found_award not in json.loads(xbmctag) and len(award_descriptions[j]) > 0 \
+                                        and ((award_type == "Winner" and tag_winners) or
+                                             (award_type == "Nominee" and tag_nominees)):
                                     awards.append(found_award)
                                 j += 1
         if len(awards) > 0:
@@ -371,16 +372,17 @@ def write_award_tags(medialist):
 ########################## END FUNCTIONS ##########################
 ###################################################################
 
+
 # These are the URLs that we will be searching for comedians
-wikiurllist=["https://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
-"https://en.wikipedia.org/wiki/List_of_stand-up_comedians",
-"https://en.wikipedia.org/wiki/List_of_Australian_stand-up_comedians",
-"https://en.wikipedia.org/wiki/List_of_Canadian_stand-up_comedians",
-"https://en.wikipedia.org/wiki/List_of_United_States_stand-up_comedians"]
+wikiurllist = ["https://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
+               "https://en.wikipedia.org/wiki/List_of_stand-up_comedians",
+               "https://en.wikipedia.org/wiki/List_of_Australian_stand-up_comedians",
+               "https://en.wikipedia.org/wiki/List_of_Canadian_stand-up_comedians",
+               "https://en.wikipedia.org/wiki/List_of_United_States_stand-up_comedians"]
 
 monitor = xbmc.Monitor()
 while not monitor.abortRequested():
-    if (c_runasservice != "true") and len(sys.argv) != 2:
+    if not c_runasservice and len(sys.argv) != 2:
         xbmc.log(msg="TAG-GEN: Manual run not requested and runasservice not selected, exiting.", level=xbmc.LOGERROR)
         sys.exit(1)
     xbmc.log(msg="TAG-GEN: Starting tag generation.", level=xbmc.LOGNOTICE)
@@ -389,16 +391,18 @@ while not monitor.abortRequested():
     awardcount = 0
     comiccount = 0
     moviecount = 0
+    c_useimdb = json.loads(__settings__.getSetting("32020"))
     c_imdburl = __settings__.getSetting(str(URLID))
     c_imdbtag = __settings__.getSetting(str(TAGID))
-    c_standup = __settings__.getSetting("32015")
+    c_usestandup = json.loads(__settings__.getSetting("32015"))
     c_standuptag = __settings__.getSetting("32016")
     c_plusurl = __settings__.getSetting("32013")
     c_minusurl = __settings__.getSetting("32014")
-    c_urlcount =  __settings__.getSetting("32099")
-    c_useimdb =  __settings__.getSetting("32020")
-    c_usetrakt = __settings__.getSetting("32023")
-    c_useawards = __settings__.getSetting("32021")
+    c_urlcount = __settings__.getSetting("32099")
+    c_usetrakt = json.loads(__settings__.getSetting("32023"))
+    c_useawards = json.loads(__settings__.getSetting("32021"))
+    c_oscarwinners = json.loads(__settings__.getSetting("32024"))
+    c_oscarnominees = json.loads(__settings__.getSetting("32025"))
     trakt_list_start = 32120
     trakt_tag_start = 32140
     trakt_user_start = 32160
@@ -410,13 +414,13 @@ while not monitor.abortRequested():
     trakt_client_secret = '6087cbfb47b8f0cdc1c0fc491ec52524c9d23bf37a8480a8c2827ea91312cbad'
     c_trakt_token = __settings__.getSetting("32031")
     c_trakt_list_count = __settings__.getSetting("32098")
-    c_debug = __settings__.getSetting("32030")
-    c_notify = __settings__.getSetting("32019")
-    manual = "false"
-    wipeout = "false"
+    c_debug = json.loads(__settings__.getSetting("32030"))
+    c_notify = json.loads(__settings__.getSetting("32019"))
+    manual = False
+    wipeout = False
 
-# Initialise IMDb URL list, add extra to list if specified by settings.xml.
-# Also make a list out of the user-defined tags
+    # Initialise IMDb URL list, add extra to list if specified by settings.xml.
+    # Also make a list out of the user-defined tags
     listurlcount = int(c_urlcount)
     imdburllist = []
     imdbtaglist = []
@@ -429,7 +433,7 @@ while not monitor.abortRequested():
         c_imdbtag = __settings__.getSetting(str(TAGID))
         listurlcount = listurlcount -1
 
-# init trakt lists and tags        
+    # init Trakt lists and tags
     trakt_list_count = int(c_trakt_list_count)
     trakt_lists = list()
     trakt_tags = list()
@@ -445,14 +449,14 @@ while not monitor.abortRequested():
         c_trakt_user = __settings__.getSetting(str(trakt_user_start))
         trakt_list_count -= 1
         
-#command line arguments for manual/tag delete executions
+    # command line arguments for manual/tag delete executions
     if len(sys.argv) == 2:
         if sys.argv[1] == "manual":
-            manual = "true"
+            manual = True
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
         elif sys.argv[1] == "wipeout":
-            wipeout = "true"
+            wipeout = True
             if xbmcgui.Dialog().yesno("Tag Generator", _getstr(30028)):
                 if xbmcgui.Dialog().yesno("Tag Generator", _getstr(30029)):
                     pDialog = xbmcgui.DialogProgress()
@@ -538,11 +542,16 @@ while not monitor.abortRequested():
             xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
             sys.exit(0)
         elif sys.argv[1] == "awards":
+            if not (c_oscarwinners or c_oscarnominees):
+                dialog = xbmcgui.Dialog()
+                ok = dialog.ok("Tag Generator", _getstr(30043))
+                xbmc.log(msg="TAG-GEN: No awards category chosen", level=xbmc.LOGERROR)
+                sys.exit(1)
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
             xbmc.log(msg="TAG-GEN: Starting awards tag writing.", level=xbmc.LOGNOTICE)
             medialist = getxbmcdb()
-            awardscount = write_award_tags(medialist)
+            awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30031) + str(awardscount) + _getstr(30040))
             xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
@@ -551,13 +560,12 @@ while not monitor.abortRequested():
             xbmc.log(msg="TAG-GEN: No valid arguments supplied.", level=xbmc.LOGERROR)
             sys.exit(1)
 
-            
-#### Read the local XBMC DB ####
+    # Read the local XBMC DB
     medialist = getxbmcdb()
 
-#### IMDB tag writing ####
-    if ("true" in c_useimdb) and ("false" in wipeout):
-        if c_notify == "true":
+    # IMDb tag writing
+    if c_useimdb and not wipeout:
+        if c_notify:
             notify(_getstr(30036))
         xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGNOTICE)
         scrapecount = 0
@@ -571,9 +579,9 @@ while not monitor.abortRequested():
         xbmc.log(msg="TAG-GEN: Skipping IMDb tag writing.", level=xbmc.LOGNOTICE)
         moviecount = 0
 
-#### Trakt movies tag writing ####
-    if ("true" in c_usetrakt) and ("false" in wipeout) and (len(c_trakt_token) == 64):
-        if c_notify == "true":
+    # Trakt movies tag writing
+    if c_usetrakt and not wipeout and (len(c_trakt_token) == 64):
+        if c_notify:
             notify(_getstr(30037))
         xbmc.log(msg="TAG-GEN: Starting Trakt tag writing.", level=xbmc.LOGNOTICE)
         i = 0
@@ -589,9 +597,9 @@ while not monitor.abortRequested():
     else:
         xbmc.log(msg="TAG-GEN: Skipping Trakt tag writing.", level=xbmc.LOGNOTICE)
 
-    #### Stand-up Comedy tag writing ####
-    if ("true" in c_standup) and ("false" in wipeout):
-        if c_notify == "true":
+    # Stand-up Comedy tag writing
+    if c_usestandup and not wipeout:
+        if c_notify:
             notify(_getstr(30038))
         newwikitag = c_standuptag
         xbmc.log(msg="TAG-GEN: Starting stand-up tag writing.", level=xbmc.LOGNOTICE)
@@ -600,23 +608,23 @@ while not monitor.abortRequested():
     else:
         xbmc.log(msg="TAG-GEN: Skipping stand-up tag writing.", level=xbmc.LOGNOTICE)
 
-    #### Awards tag writing ####
-    if ("true" in c_useawards) and ("false" in wipeout):
-        if c_notify == "true":
+    # Awards tag writing
+    if c_useawards and not wipeout and (c_oscarwinners or c_oscarnominees):
+        if c_notify:
             notify(_getstr(30039))
         medialist = getxbmcdb()
         xbmc.log("TAG-GEN: Starting awards tag writing.", level=xbmc.LOGNOTICE)
-        awardscount = write_award_tags(medialist)
+        awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
     else:
         xbmc.log(msg="TAG-GEN: Skipping awards tag writing.", level=xbmc.LOGNOTICE)
 
-    if "true" in manual:
+    if manual:
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30032) + str(comiccount)
                        + _getstr(30033) + str(awardscount) + _getstr(30040))
         xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
         sys.exit(0)
-    elif "true" in wipeout:
+    elif wipeout:
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30034) + str(wipedcount) + _getstr(30035))
         xbmc.log(msg="TAG-GEN: Wipeout arg received, exiting after single execution.", level=xbmc.LOGNOTICE)

@@ -1,28 +1,17 @@
+from bs4 import BeautifulSoup
 import datetime
 import json
 import os
 import re
+import requests
+import simplejson
 import sys
 import xbmc
-import xbmcgui 
+import xbmcgui
 import xbmcaddon
-try:
-    import requests
-    import simplejson
-    import trakt
-    from trakt import users
-    from bs4 import BeautifulSoup
-except:
-    if os.name == "nt":
-        slash = "\\"
-    else:
-        slash = "/"
-    sys.path.append(os.path.abspath(os.path.dirname(__file__)+slash+"resources"+slash+"lib"))
-    import requests
-    import simplejson
-    import trakt
-    from trakt import users
-    from bs4 import BeautifulSoup
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources", "lib"))
+import trakt
+from trakt import users as traktusers
 
 try:
     from hashlib import sha1
@@ -58,7 +47,7 @@ def internet_test(url):
         pass
     if len(sys.argv) == 2:
         dialog = xbmcgui.Dialog() 
-        ok = dialog.ok(_getstr(30000),url + _getstr(30001))
+        ok = dialog.ok(_getstr(30000), url + _getstr(30001))
     xbmc.log(msg="TAG-GEN: " + str(url) + " unreachable. Check network and retry.", level=xbmc.LOGERROR)
     sys.exit(1)
 
@@ -67,19 +56,19 @@ def internet_test(url):
 def ifcancel():
     if len(sys.argv) == 2:
         if (pDialog.iscanceled()):
-            xbmc.log(msg="TAG-GEN: Cancel received from Kodi dialog, exiting.", level=xbmc.LOGNOTICE)
+            debuglog("TAG-GEN: Cancel received from Kodi dialog, exiting.")
             sys.exit(0)
 
 
-#def to make a debug log
+# debug logs
 def debuglog(string):
     if c_debug:
         xbmc.log(msg=string, level=xbmc.LOGNOTICE)
 
 
 def notify(input):
-    icon = os.path.abspath(os.path.dirname(__file__)) + slash + 'icon.png'
-    xbmc.executebuiltin("Notification(Tag Generator," + str(input) + ",2500," + icon + ")")
+    icon = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'icon.png')
+    xbmcgui.Dialog().notification("Tag Generator", str(input), icon, 2500)
 
 
 # A function to overwrite EVERY tag found in the database with a blank [] tag.    
@@ -164,9 +153,9 @@ def get_trakt_movies(user_name, list_name, token):
     trakt.core.CLIENT_ID = trakt_client_id
     trakt.core.CLIENT_SECRET = trakt_client_secret
     if list_name.lower() == "watchlist":
-        target_list = users.User(user_name).watchlist_movies
+        target_list = traktusers.User(user_name).watchlist_movies
     else:
-        target_list = users.User(user_name).get_list(list_name).get_items()
+        target_list = traktusers.User(user_name).get_list(list_name).get_items()
     found_ids = list()
     for item in target_list:
         imdb_id = item.ids["ids"]["imdb"]
@@ -385,7 +374,8 @@ while not monitor.abortRequested():
     if not c_runasservice and len(sys.argv) != 2:
         xbmc.log(msg="TAG-GEN: Manual run not requested and runasservice not selected, exiting.", level=xbmc.LOGERROR)
         sys.exit(1)
-    xbmc.log(msg="TAG-GEN: Starting tag generation.", level=xbmc.LOGNOTICE)
+    c_debug = json.loads(__settings__.getSetting("32030"))
+    debuglog("TAG-GEN: Starting tag generation.")
     URLID=32050
     TAGID=32080
     awardcount = 0
@@ -414,7 +404,7 @@ while not monitor.abortRequested():
     trakt_client_secret = '6087cbfb47b8f0cdc1c0fc491ec52524c9d23bf37a8480a8c2827ea91312cbad'
     c_trakt_token = __settings__.getSetting("32031")
     c_trakt_list_count = __settings__.getSetting("32098")
-    c_debug = json.loads(__settings__.getSetting("32030"))
+
     c_notify = json.loads(__settings__.getSetting("32019"))
     manual = False
     wipeout = False
@@ -465,12 +455,10 @@ while not monitor.abortRequested():
                     xbmc.log(msg="TAG-GEN: Finished wiping tags.", level=xbmc.LOGNOTICE)
                     sys.exit(0)
                 else:
-                    xbmc.log(msg="TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.",
-                             level=xbmc.LOGNOTICE)
+                    debuglog("TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.")
                     sys.exit(0)
             else:
-                xbmc.log(msg="TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.",
-                         level=xbmc.LOGNOTICE)
+                debuglog("TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.")
                 sys.exit(0)
         elif sys.argv[1] == "standup":
             pDialog = xbmcgui.DialogProgress()
@@ -482,12 +470,12 @@ while not monitor.abortRequested():
             comiccount = writestanduptags(comedians, medialist, newwikitag)
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30031) + str(comiccount) + _getstr(30033))
-            xbmc.log(msg="TAG-GEN: Manual Stand-Up arg received, exiting after execution.", level=xbmc.LOGNOTICE)
+            debuglog("TAG-GEN: Manual Stand-Up arg received, exiting after execution.")
             sys.exit(0)
         elif sys.argv[1] == "imdb":
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.",level=xbmc.LOGNOTICE)
+            xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGNOTICE)
             medialist = getxbmcdb()
             scrapecount = 0
             for imdburl in imdburllist:
@@ -497,7 +485,7 @@ while not monitor.abortRequested():
                 scrapecount = scrapecount + 1
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30031)+str(moviecount)+_getstr(30003))
-            xbmc.log(msg="TAG-GEN: Manual IMDb arg received, exiting after execution.", level=xbmc.LOGNOTICE)
+            debuglog("TAG-GEN: Manual IMDb arg received, exiting after execution.")
             sys.exit(0)
         elif sys.argv[1] == "trakt_init":
             dialog = xbmcgui.Dialog()
@@ -515,7 +503,7 @@ while not monitor.abortRequested():
                     xbmc.log(msg="Unable to retrieve Trakt oauth token." + str(e), level=xbmc.LOGERROR)
                     sys.exit(0)
             else:
-                xbmc.log(msg="TAG-GEN: Manual Trakt Init arg received, exiting after execution.", level=xbmc.LOGNOTICE)
+                debuglog("TAG-GEN: Manual Trakt Init arg received, exiting after execution.")
                 sys.exit(0)
         elif sys.argv[1] == "trakt":
             if len(c_trakt_token) != 64:
@@ -539,7 +527,7 @@ while not monitor.abortRequested():
                 i += 1
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30003))
-            xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
+            debuglog("TAG-GEN: Manual arg received, exiting after single execution.")
             sys.exit(0)
         elif sys.argv[1] == "awards":
             if not (c_oscarwinners or c_oscarnominees):
@@ -554,7 +542,7 @@ while not monitor.abortRequested():
             awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
             dialog = xbmcgui.Dialog()
             ok = dialog.ok("Tag Generator", _getstr(30031) + str(awardscount) + _getstr(30040))
-            xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
+            debuglog("TAG-GEN: Manual arg received, exiting after single execution.")
             sys.exit(0)
         else:
             xbmc.log(msg="TAG-GEN: No valid arguments supplied.", level=xbmc.LOGERROR)
@@ -576,7 +564,7 @@ while not monitor.abortRequested():
             moviecount = moviecount + writeimdbtags(imdblist, medialist, newimdbtag)
             scrapecount = scrapecount + 1
     else:
-        xbmc.log(msg="TAG-GEN: Skipping IMDb tag writing.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Skipping IMDb tag writing.")
         moviecount = 0
 
     # Trakt movies tag writing
@@ -595,7 +583,7 @@ while not monitor.abortRequested():
                 xbmc.log(msg="TAG-GEN: Could not retrieve movies from Trakt API.", level=xbmc.LOGERROR)
             i += 1
     else:
-        xbmc.log(msg="TAG-GEN: Skipping Trakt tag writing.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Skipping Trakt tag writing.")
 
     # Stand-up Comedy tag writing
     if c_usestandup and not wipeout:
@@ -606,7 +594,7 @@ while not monitor.abortRequested():
         comedians = scrapewiki()
         comiccount = writestanduptags(comedians, medialist, newwikitag)
     else:
-        xbmc.log(msg="TAG-GEN: Skipping stand-up tag writing.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Skipping stand-up tag writing.")
 
     # Awards tag writing
     if c_useawards and not wipeout and (c_oscarwinners or c_oscarnominees):
@@ -616,18 +604,18 @@ while not monitor.abortRequested():
         xbmc.log("TAG-GEN: Starting awards tag writing.", level=xbmc.LOGNOTICE)
         awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
     else:
-        xbmc.log(msg="TAG-GEN: Skipping awards tag writing.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Skipping awards tag writing.")
 
     if manual:
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30031) + str(moviecount) + _getstr(30032) + str(comiccount)
                        + _getstr(30033) + str(awardscount) + _getstr(30040))
-        xbmc.log(msg="TAG-GEN: Manual arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Manual arg received, exiting after single execution.")
         sys.exit(0)
     elif wipeout:
         dialog = xbmcgui.Dialog()
         ok = dialog.ok("Tag Generator", _getstr(30034) + str(wipedcount) + _getstr(30035))
-        xbmc.log(msg="TAG-GEN: Wipeout arg received, exiting after single execution.", level=xbmc.LOGNOTICE)
+        debuglog("TAG-GEN: Wipeout arg received, exiting after single execution.")
         sys.exit(0)
     else:
         xbmc.log(msg="TAG-GEN: Sleeping for " + str(c_refresh) + " hours", level=xbmc.LOGNOTICE)

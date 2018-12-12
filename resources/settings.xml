@@ -7,14 +7,13 @@
         <setting label="30914" id="32015" type="bool" default="false"/>
         <setting label="30903" id="32016" type="text" visible="eq(-1,true)" default="Standup"/>
         <setting type="sep"/>
-        <setting label="30930" id="35015" type="bool" default="false"/>
-        <setting label="33903" id="35016" type="text" visible="eq(-1,true)" default="Oscars"/>
+        <setting label="30930" id="32021" type="bool" default="false"/>
         <setting type="sep"/>
         <setting label="30931" id="32019" type="bool" default="true"/>
         <setting label="30932" id="32030" type="bool" default="false"/>
     </category>
     <category label="IMDb">
-        <setting label="Use IMDb" id="32020" type="bool" default="false"/>
+        <setting label="30928" id="32020" type="bool" default="false"/>
         <setting label="30905" id="32099" type="enum" visible="eq(-1,true)" default="1" values="1|2|3|4|5"/>
         <setting label="30906" id="32050" type="text" visible="eq(-2,true)" default="http://www.imdb.com/user/ur12345678/watchlist"/>
         <setting label="30903" id="32080" type="text" visible="eq(-3,true)" default="Your Tag"/>
@@ -28,7 +27,7 @@
         <setting label="30903" id="32084" type="text" visible="gt(-10,3) + eq(-11,true)" default="Your Tag"/>
     </category>
     <category label="Trakt">
-        <setting label="Use Trakt Movie Lists" id="32023" type="bool" default="false"/>
+        <setting label="30927" id="32023" type="bool" default="false"/>
         <setting label="30917" id="32032" type="action" visible="eq(-1,true)" action="RunScript(script.tag-generator, trakt_init)"/>
         <setting label="30918" type="text" id="32031" enable="fdalse" visible="eq(-2,true)" default="-please request token-"/>
         <setting label="30921" id="32098" visible="eq(-3,true)" default="1" type="enum" values="1|2|3|4|5"/>
@@ -51,7 +50,7 @@
     <category label="Misc">
         <setting label="30913" id="32027" type="action" action="RunScript(script.tag-generator, imdb)"/>
         <setting label="30920" id="32032" type="action" action="RunScript(script.tag-generator, trakt)"/>
-        <setting label="30930" id="32021" type="action" action="RunScript(script.tag-generator, oscars)"/>
+        <setting label="30926" id="32022" type="action" action="RunScript(script.tag-generator, awards)"/>
         <setting label="30914" id="32028" type="action" action="RunScript(script.tag-generator, standup)"/>
         <setting label="30915" id="32017" type="action" action="RunScript(script.tag-generator, manual)"/>
         <setting label="30916" id="32018" type="action" action="RunScript(script.tag-generator, wipeout)"/>

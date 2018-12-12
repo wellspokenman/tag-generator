@@ -149,7 +149,7 @@ msgid " movies, "
 msgstr " movies, "
 
 msgctxt "#30033"
-msgid " stand-up features, and"
+msgid " stand-up features, and "
 msgstr " stand-up feature, and "
 
 msgctxt "#30034"
@@ -173,12 +173,20 @@ msgid "tagging stand-up features"
 msgstr "tagging stand-up features."
 
 msgctxt "#30039"
-msgid "tagging oscar movies."
-msgstr "tagging oscar movies."
+msgid "tagging movie awards."
+msgstr "tagging movie awards."
 
 msgctxt "#30040"
-msgid " Oscar nominated movies"
-msgstr " Oscar nominated movies"
+msgid " award winning/nominated movies."
+msgstr " award winning/nominated movies."
+
+msgctxt "#30041"
+msgid "Searching for award winning/nominated movies."
+msgstr "Searching for award winning/nominated movies."
+
+msgctxt "#30042"
+msgid "Writing awards tags to: "
+msgstr "Writing awards tags to: "
 
 msgctxt "#30900"
 msgid "Settings"
@@ -260,6 +268,18 @@ msgctxt "#30925"
 msgid "Error: Unable to retrieve Trakt oauth token."
 msgstr "Error: Unable to retrieve Trakt oauth token."
 
+msgctxt "#30926"
+msgid "Write Awards Tags"
+msgstr "Write Awards Tags"
+
+msgctxt "#30927"
+msgid "Use Trakt Movie Lists"
+msgstr "Use Trakt Movie Lists"
+
+msgctxt "#30928"
+msgid "Use IMDb Lists"
+msgstr "Use IMDb Lists"
+
 msgctxt "#30929"
 msgid "Trakt Username"
 msgstr "Trakt Username"
@@ -275,164 +295,3 @@ msgstr "Notifications"
 msgctxt "#30932"
 msgid "Debug Mode"
 msgstr "Debug Mode"
-
-msgctxt "#33046"
-msgid "Scraping Wikipedia for oscar nominees..."
-msgstr "Scraping Wikipedia for oscar nominees..."
-
-msgctxt "#33047"
-msgid "TAG-GEN: Found oscar nominee: "
-msgstr "TAG-GEN: Found oscar nominee: "
-
-msgctxt "#33048"
-msgid " in Wiki URL: "
-msgstr " in Wiki URL: "
-
-msgctxt "#33049"
-msgid " contains no oscar nominees. Check URL and retry."
-msgstr " contains no oscar nominees. Check URL and retry."
-
-msgctxt "#33050"
-msgid "Scanning for local matches to Wikipedia oscar nominees..."
-msgstr "Scanning for local matches to Wikipedia oscar nominees..."
-
-msgctxt "#33051"
-msgid "TAG-GEN: Match found for oscar nominee: "
-msgstr "TAG-GEN: Match found for oscar nominee: "
-
-msgctxt "#33052"
-msgid " in feature: "
-msgstr " in feature: "
-
-msgctxt "#33054"
-msgid "Writing tag '"
-msgstr "Writing tag '"
-
-msgctxt "#33055"
-msgid "' to "
-msgstr "' to "
-
-msgctxt "#33056"
-msgid " Oscar nominated features."
-msgstr " Oscar nominated features."
-
-msgctxt "#33057"
-msgid "Acquiring links nominated in relevant academy awards "
-msgstr "Acquiring links nominated in relevant academy awards "
-
-msgctxt "#33058"
-msgid " oscar nominated films."
-msgstr " oscar nominated films."
-
-msgctxt "#33059"
-msgid "TAG-GEN: No match found for this oscar nominated film: "
-msgstr "TAG-GEN: No match found for this oscar nominated film: "
-
-msgctxt "#33060"
-msgid " in feature: "
-msgstr " in feature: "
-
-msgctxt "#33061"
-msgid " with existing tag: "
-msgstr " with existing tag: "
-
-msgctxt "#33063"
-msgid "TAG-GEN: Starting scraped tag generation."
-msgstr "TAG-GEN: Starting scraped tag generation."
-
-msgctxt "#33064"
-msgid "Number of ceremonies to search: "
-msgstr "Number of ceremonies to search: "
-
-msgctxt "#33065"
-msgid "Scraping ceremony pages"
-msgstr "Scraping ceremony pages"
-
-msgctxt "#33066"
-msgid "wiki url: "
-msgstr "wiki url: "
-
-msgctxt "#33067"
-msgid "progress: "
-msgstr "progress: "
-
-msgctxt "#33068"
-msgid "wiki url failed: "
-msgstr "wiki url failed: "
-
-msgctxt "#33069"
-msgid "creating set of links"
-msgstr "creating set of links"
-
-msgctxt "#33070"
-msgid " keys"
-msgstr " keys"
-
-msgctxt "#33071"
-msgid "unique url set created"
-msgstr "unique url set created"
-
-msgctxt "#33072"
-msgid "Finding IMDb IDs"
-msgstr "Finding IMDb IDs"
-
-msgctxt "#33073"
-msgid "TAG-GEN: Starting oscar tag writing."
-msgstr "TAG-GEN: Starting oscar tag writing."
-
-msgctxt "#33074"
-msgid "URL: "
-msgstr "URL: "
-
-msgctxt "#33075"
-msgid "Creating IMDb set"
-msgstr "Creating IMDb set"
-
-msgctxt "#33076"
-msgid "Analysing library"
-msgstr "Analysing library"
-
-msgctxt "#33077"
-msgid "Searching library for academy nominated films."
-msgstr "Searching library for academy nominated films."
-
-msgctxt "#33078"
-msgid "imdbid: "
-msgstr "imdbid: "
-
-msgctxt "#33079"
-msgid "TAG-GEN: Skipping oscars tag writing."
-msgstr "TAG-GEN: Skipping oscars tag writing."
-
-msgctxt "#33080"
-msgid "cataloging every distinct year in library"
-msgstr "cataloging every distinct year in library"
-
-msgctxt "#33081"
-msgid "Failed to log year of film"
-msgstr "Failed to log year of film"
-
-msgctxt "#33082"
-msgid "Failed to log years of medialist"
-msgstr "Failed to log years of medialist"
-
-msgctxt "#33083"
-msgid "List lengths are different."
-msgstr "List lengths are different."
-
-msgctxt "#33084"
-msgid "Failed to process ceremonies"
-msgstr "Failed to process ceremonies"
-
-msgctxt "#33085"
-msgid "Failed to acquire all academy awards"
-msgstr "Failed to acquire all academy awards"
-
-msgctxt "#33086"
-msgid "Write failed."
-msgstr "Write failed."
-
-msgctxt "#33903"
-msgid "Set oscars tag in Kodi:"
-msgstr "Set oscars tag in Kodi:"
-

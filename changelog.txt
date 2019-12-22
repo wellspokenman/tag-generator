@@ -1,3 +1,9 @@
+v0.7 (December 12th, 2018)
+- Kodi 18 Support
+- Kodi 18 Support
+- Bugfix for multiple Trakt users (ryanjerksine)
+- Bugfixes and code cleanup
+
 v0.6 (December 12th, 2018)
 - Added Oscar award/nominee tagging (inspired by Jorge: https://github.com/bluesauce)
 - Updated regex to support IMDb lists of all types (Top250, Academy Awards, Sundance etc)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.tag-generator"
        name="Tag Generator"
-       version="0.6.4"
+       version="0.7.0"
        provider-name="wellspokenman">
   <requires>
     <import addon="xbmc.python" version="2.25.0"/>
@@ -21,15 +21,10 @@
 	<forum>http://forum.kodi.tv/showthread.php?tid=140494</forum>
 	<source>https://github.com/wellspokenman/tag-generator</source>
     <news>
-    v0.6.4 (December 15th, 2018)
-    - Added Oscar award/nominee tagging (inspired by Jorge: https://github.com/bluesauce)
-    - Updated regex to support IMDb lists of all types (Top250, Academy Awards, Sundance etc)
-    - Added notifications (can be disabled in Settings)
-    - Service interval now relies on local machine time
-    - Fixed bug that prevented service from exiting cleanly in some situations
-    - Trakt token in settings is now read-only
-    - Replaced urllib2 with requests
-    - Code cleanup
+     v0.7 (December 12th, 2018)
+      - Kodi 18 Support
+      - Bugfix for multiple Trakt users (ryanjerksine)
+      - bugfixes and code cleanup
     </news>
   </extension>
 </addon>

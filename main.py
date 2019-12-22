@@ -434,6 +434,7 @@ while not monitor.abortRequested():
         trakt_users.append(c_trakt_user)
         trakt_list_start+=1
         trakt_tag_start+=1
+        trakt_user_start+=1
         c_trakt_list = __settings__.getSetting(str(trakt_list_start))
         c_trakt_tag = __settings__.getSetting(str(trakt_tag_start))
         c_trakt_user = __settings__.getSetting(str(trakt_user_start))

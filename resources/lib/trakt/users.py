@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 """Interfaces to all of the User objects offered by the Trakt.tv API"""
-from collections import namedtuple
-from trakt.core import get, post, delete
+
+from dataclasses import dataclass
+from typing import Any, NamedTuple, Optional, Union
+
+from trakt.core import delete, get, post
+from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
-from trakt.tv import TVShow, TVSeason, TVEpisode
-from trakt.utils import slugify, extract_ids, unicode_safe
+from trakt.tv import TVEpisode, TVSeason, TVShow
+from trakt.utils import slugify
 
 __author__ = 'Jon Nappi'
-__all__ = ['User', 'UserList', 'Request', 'follow', 'get_all_requests',
+__all__ = ['User', 'UserList', 'PublicList', 'Request', 'follow', 'get_all_requests',
            'get_user_settings', 'unfollow']
 
 
-class Request(namedtuple('Request', ['id', 'requested_at', 'user'])):
-    __slots__ = ()
+class Request(NamedTuple):
+    id: int
+    user: Any
+    requested_at: str
 
     @post
     def approve(self):
@@ -30,7 +36,7 @@ def follow(user_name):
     follow request will be in a pending state. If they have a public profile,
     they will be followed immediately.
     """
-    yield 'users/{username}/follow'.format(username=user_name)
+    yield 'users/{username}/follow'.format(username=slugify(user_name))
 
 
 @get
@@ -57,24 +63,145 @@ def get_user_settings():
 def unfollow(user_name):
     """Unfollow a user you're currently following with a username of *user_name*
     """
-    yield 'users/{username}/follow'.format(username=user_name)
+    yield 'users/{username}/follow'.format(username=slugify(user_name))
 
 
-class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
-                                       'display_numbers', 'allow_comments',
-                                       'sort_by', 'sort_how', 'created_at',
-                                       'updated_at', 'item_count',
-                                       'comment_count', 'likes', 'trakt',
-                                       'slug', 'user', 'creator'])):
+@dataclass(frozen=True)
+class ListEntry:
+    id: int
+    rank: int
+    listed_at: str
+    type: str
+    # data for "type" structure
+    data: Any
+    notes: Optional[str] = None
+
+    @property
+    def item(self):
+        # Poor man's cached_property
+        if self.type not in self.__dict__:
+            # Avoid recursion
+            error = object()
+            self.__dict__[self.type] = error
+            value = getattr(self, self.type, None)
+            if value is error:
+                raise RuntimeError(f"Invalid type: {self.type}")
+            self.__dict__[self.type] = value
+
+        return self.__dict__[self.type]
+
+    @property
+    def movie(self):
+        data = self.data.copy()
+        title = data.pop("title")
+        return Movie(title, **data)
+
+    @property
+    def show(self):
+        return TVShow(**self.data)
+
+    @property
+    def season(self):
+        data = self.data.copy()
+        show = data.pop("show")
+        season = data.pop("number")
+        ids = show["ids"]
+        return TVSeason(show=show["title"], season=season, slug=ids["slug"], **data)
+
+    @property
+    def episode(self):
+        data = self.data.copy()
+        show = data.pop("show")
+        ids = show["ids"]
+        return TVEpisode(show=show["title"], show_id=ids["trakt"], **data)
+
+    def __getattr__(self, name):
+        """
+        Delegate everything missing to sub-item
+        """
+        return self.item.__getattribute__(name)
+
+
+@dataclass(frozen=True)
+class ListDescription:
+    name: str
+    description: str
+    privacy: str
+    share_link: str
+    type: str
+    display_numbers: bool
+    allow_comments: bool
+    sort_by: str
+    sort_how: str
+    created_at: str
+    updated_at: str
+    item_count: int
+    comment_count: int
+    likes: int
+    user: Any
+    creator: Optional[str] = None
+
+
+class PublicList(DataClassMixin(ListDescription), IdsMixin):
+    """A record for public lists """
+
+    def __init__(self, ids=None, **kwargs):
+        super().__init__(**kwargs)
+        self._ids = ids
+        self._items = None
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __len__(self):
+        return len(self.items)
+
+    @classmethod
+    @get
+    def load(cls, id: int) -> Union[ListEntry, "PublicList"]:
+        """
+        https://trakt.docs.apiary.io/#reference/lists/list/get-list
+        """
+        data = yield f"lists/{id}"
+        yield cls(**data)
+
+    @property
+    def items(self):
+        if self._items is None:
+            self._load_items()
+        return self._items
+
+    @get
+    def _load_items(self):
+        """
+        https://trakt.docs.apiary.io/#reference/lists/list-items
+        """
+        data = yield f"lists/{self.trakt}/items"
+        self._items = list(self._process_items(data))
+        yield self._items
+
+    @staticmethod
+    def _process_items(items):
+        for item in items:
+            if "type" not in item:
+                continue
+            data = item.pop(item["type"])
+            if "show" in item:
+                data["show"] = item.pop("show")
+            yield ListEntry(**item, data=data)
+
+
+class UserList(DataClassMixin(ListDescription), IdsMixin):
     """A list created by a Trakt.tv :class:`User`"""
 
-    def __init__(self, *args, **kwargs):
-        super(UserList, self).__init__()
+    def __init__(self, ids=None, **kwargs):
+        super().__init__(**kwargs)
+        self._ids = ids
         self._items = list()
 
-    def __iter__(self, *args, **kwargs):
+    def __iter__(self):
         """Iterate over the items in this user list"""
-        return self._items.__iter__(*args, **kwargs)
+        return self._items.__iter__()
 
     @classmethod
     @post
@@ -94,9 +221,8 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
                 'allow_comments': allow_comments}
         if description is not None:
             args['description'] = description
-        data = yield 'users/{user}/lists'.format(user=creator), args
-        extract_ids(data)
-        yield UserList(creator=creator, user=creator, **data)
+        data = yield 'users/{user}/lists'.format(user=slugify(creator)), args
+        yield cls(creator=creator, user=creator, **data)
 
     @classmethod
     @get
@@ -105,10 +231,9 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
 
         :param title: Name of the list.
         """
-        data = yield 'users/{user}/lists/{id}'.format(user=creator,
+        data = yield 'users/{user}/lists/{id}'.format(user=slugify(creator),
                                                       id=slugify(title))
-        extract_ids(data)
-        ulist = UserList(creator=creator, **data)
+        ulist = cls(creator=creator, **data)
         ulist.get_items()
 
         yield ulist
@@ -120,8 +245,8 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
 
         """
 
-        data = yield 'users/{user}/lists/{id}/items'.format(user=self.creator,
-                                                            id=self.slug)
+        data = yield 'users/{user}/lists/{id}/items'.format(
+            user=slugify(self.creator), id=self.slug)
 
         for item in data:
             # match list item type
@@ -129,28 +254,26 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
                 continue
             item_type = item['type']
             item_data = item.pop(item_type)
-            extract_ids(item_data)
             if item_type == 'movie':
                 self._items.append(Movie(item_data['title'], item_data['year'],
-                                         item_data['slug']))
+                                         item_data['ids']['slug']))
             elif item_type == 'show':
                 self._items.append(TVShow(item_data['title'],
-                                          item_data['slug']))
+                                          item_data['ids']['slug']))
             elif item_type == 'season':
                 show_data = item.pop('show')
-                extract_ids(show_data)
                 season = TVSeason(show_data['title'], item_data['number'],
-                                  show_data['slug'])
+                                  show_data['ids']['slug'])
                 self._items.append(season)
             elif item_type == 'episode':
                 show_data = item.pop('show')
-                extract_ids(show_data)
                 episode = TVEpisode(show_data['title'], item_data['season'],
-                                    item_data['number'])
+                                    item_data['number'],
+                                    show_id=show_data['ids']['trakt'])
                 self._items.append(episode)
             elif item_type == 'person':
                 self._items.append(Person(item_data['name'],
-                                          item_data['slug']))
+                                          item_data['ids']['slug']))
 
         yield self._items
 
@@ -162,14 +285,14 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
         people = [p.ids for p in items if isinstance(p, Person)]
         self._items = items
         args = {'movies': movies, 'shows': shows, 'people': people}
-        uri = 'users/{user}/lists/{id}/items'.format(user=self.creator,
-                                                     id=self.trakt)
+        uri = 'users/{user}/lists/{id}/items'.format(
+            user=slugify(self.creator), id=self.trakt)
         yield uri, args
 
     @delete
     def delete_list(self):
         """Delete this :class:`UserList`"""
-        yield 'users/{user}/lists/{id}'.format(user=self.creator,
+        yield 'users/{user}/lists/{id}'.format(user=slugify(self.creator),
                                                id=self.trakt)
 
     @post
@@ -178,7 +301,7 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
         Only one like is allowed per list per user.
         """
         uri = 'users/{user}/lists/{id}/like'
-        yield uri.format(user=self.creator, id=self.trakt), None
+        yield uri.format(user=slugify(self.creator), id=self.trakt), None
 
     @post
     def remove_items(self, *items):
@@ -189,21 +312,22 @@ class UserList(namedtuple('UserList', ['name', 'description', 'privacy',
         people = [p.ids for p in items if isinstance(p, Person)]
         self._items = items
         args = {'movies': movies, 'shows': shows, 'people': people}
-        uri = 'users/{user}/lists/{id}/items/remove'.format(user=self.creator,
-                                                            id=self.trakt)
+        uri = 'users/{user}/lists/{id}/items/remove'.format(
+            user=slugify(self.creator), id=self.trakt)
         yield uri, args
 
     @delete
     def unlike(self):
         """Remove a like on this :class:`UserList`."""
         uri = 'users/{username}/lists/{id}/like'
-        yield uri.format(username=self.creator, id=self.trakt)
+        yield uri.format(username=slugify(self.creator), id=self.trakt)
 
 
-class User(object):
+class User:
     """A Trakt.tv User"""
+
     def __init__(self, username, **kwargs):
-        super(User, self).__init__()
+        super().__init__()
         self.username = username
         self._calendar = self._last_activity = self._watching = None
         self._movies = self._movie_collection = self._movies_watched = None
@@ -224,7 +348,7 @@ class User(object):
     @get
     def _get(self):
         """Get this :class:`User` from the trakt.tv API"""
-        data = yield 'users/{username}'.format(username=self.username)
+        data = yield 'users/{username}'.format(username=slugify(self.username))
         self._build(data)
 
     def _build(self, data):
@@ -241,7 +365,8 @@ class User(object):
         display data either.
         """
         if self._followers is None:
-            data = yield 'users/{user}/followers'.format(user=self.username)
+            data = yield 'users/{user}/followers'.format(
+                user=slugify(self.username))
             self._followers = []
             for user in data:
                 user_data = user.pop('user')
@@ -258,7 +383,8 @@ class User(object):
         that are protected won't display data either.
         """
         if self._following is None:
-            data = yield 'users/{user}/following'.format(user=self.username)
+            data = yield 'users/{user}/following'.format(
+                user=slugify(self.username))
             self._following = []
             for user in data:
                 user_data = user.pop('user')
@@ -277,7 +403,8 @@ class User(object):
         """
         if self._friends is None:
             self._friends = []
-            data = yield 'users/{user}/friends'.format(user=self.username)
+            data = yield 'users/{user}/friends'.format(
+                user=slugify(self.username))
             for user in data:
                 user_data = user.pop('user')
                 date = user.pop('friends_at')
@@ -293,10 +420,13 @@ class User(object):
         """
         if self._lists is None:
             data = yield 'users/{username}/lists'.format(
-                username=self.username
-            )
-            self._lists = [UserList(creator=self.username, user=self,
-                           **extract_ids(ul)) for ul in data]
+                username=slugify(self.username))
+            for ul in data:
+                if "user" in ul:
+                    # user will be replaced with the self User object
+                    del ul["user"]
+            self._lists = [UserList(creator=slugify(self.username), user=self,
+                           **ul) for ul in data]
         yield self._lists
 
     @property
@@ -306,12 +436,11 @@ class User(object):
         """
         if self._show_watchlist is None:
             data = yield 'users/{username}/watchlist/shows'.format(
-                username=self.username,
+                username=slugify(self.username),
             )
             self._show_watchlist = []
             for show in data:
                 show_data = show.pop('show')
-                extract_ids(show_data)
                 show_data.update(show)
                 self._show_watchlist.append(TVShow(**show_data))
             yield self._show_watchlist
@@ -324,12 +453,12 @@ class User(object):
         """
         if self._movie_watchlist is None:
             data = yield 'users/{username}/watchlist/movies'.format(
-                username=self.username,
+                username=slugify(self.username),
             )
             self._movie_watchlist = []
             for movie in data:
                 mov = movie.pop('movie')
-                extract_ids(mov)
+                mov.update(movie)
                 self._movie_watchlist.append(Movie(**mov))
             yield self._movie_watchlist
         yield self._movie_watchlist
@@ -343,11 +472,10 @@ class User(object):
         """
         if self._movie_collection is None:
             ext = 'users/{username}/collection/movies?extended=metadata'
-            data = yield ext.format(username=self.username)
+            data = yield ext.format(username=slugify(self.username))
             self._movie_collection = []
             for movie in data:
                 mov = movie.pop('movie')
-                extract_ids(mov)
                 self._movie_collection.append(Movie(**mov))
         yield self._movie_collection
 
@@ -360,31 +488,36 @@ class User(object):
         """
         if self._show_collection is None:
             ext = 'users/{username}/collection/shows?extended=metadata'
-            data = yield ext.format(username=self.username)
+            data = yield ext.format(username=slugify(self.username))
             self._show_collection = []
-            for show in data:
-                s = show.pop('show')
-                extract_ids(s)
-                sh = TVShow(**s)
-                sh._seasons = [TVSeason(show=sh.title, **sea)
-                               for sea in show.pop('seasons')]
-                self._show_collection.append(sh)
+            for show_data in data:
+                show_item = show_data.pop('show')
+                seasons = show_data.pop('seasons')
+                full_show = TVShow(**show_item)
+                for season in seasons:
+                    ts = next(s for s in full_show.seasons if s.season == season.get('number'))
+                    for ep in season.get('episodes'):
+                        te = next(e for e in ts.episodes if e.number == ep.get('number'))
+                        ep['title'] = te.title
+                        ep.update(te.ids)
+                del te, ts, full_show
+                show = TVShow(**show_item, seasons=seasons)
+                self._show_collection.append(show)
         yield self._show_collection
 
     @property
     @get
     def watched_movies(self):
-        """Watched profess for all :class:`Movie`'s in this :class:`User`'s
+        """Watched progress for all :class:`Movie`'s in this :class:`User`'s
         collection.
         """
         if self._watched_movies is None:
             data = yield 'users/{user}/watched/movies'.format(
-                user=self.username
+                user=slugify(self.username)
             )
             self._watched_movies = []
             for movie in data:
                 movie_data = movie.pop('movie')
-                extract_ids(movie_data)
                 movie_data.update(movie)
                 self._watched_movies.append(Movie(**movie_data))
         yield self._watched_movies
@@ -392,17 +525,16 @@ class User(object):
     @property
     @get
     def watched_shows(self):
-        """Watched profess for all :class:`TVShow`'s in this :class:`User`'s
+        """Watched progress for all :class:`TVShow`'s in this :class:`User`'s
         collection.
         """
         if self._watched_shows is None:
             data = yield 'users/{user}/watched/shows'.format(
-                user=self.username
+                user=slugify(self.username)
             )
             self._watched_shows = []
             for show in data:
                 show_data = show.pop('show')
-                extract_ids(show_data)
                 show_data.update(show)
                 self._watched_shows.append(TVShow(**show_data))
         yield self._watched_shows
@@ -415,7 +547,8 @@ class User(object):
         will be returned. Protected users won't return any data unless you are
         friends.
         """
-        data = yield 'users/{user}/watching'.format(user=self.username)
+        data = yield 'users/{user}/watching'.format(
+            user=slugify(self.username))
 
         # if a user isn't watching anything, trakt returns a 204
         if data is None or data == '':
@@ -424,14 +557,13 @@ class User(object):
         media_type = data.pop('type')
         if media_type == 'movie':
             movie_data = data.pop('movie')
-            extract_ids(movie_data)
             movie_data.update(data)
             yield Movie(**movie_data)
         else:  # media_type == 'episode'
             ep_data = data.pop('episode')
-            extract_ids(ep_data)
             sh_data = data.pop('show')
-            ep_data.update(data, show=sh_data.get('title'))
+            ep_data.update(data, show=sh_data.get('title'),
+                           show_id=sh_data.get('trakt'))
             yield TVEpisode(**ep_data)
 
     @staticmethod
@@ -457,7 +589,7 @@ class User(object):
             'movies', 'shows', 'seasons', 'episodes'
         :param rating: Optional rating between 1 and 10
         """
-        uri = 'users/{user}/ratings/{type}'.format(user=self.username,
+        uri = 'users/{user}/ratings/{type}'.format(user=slugify(self.username),
                                                    type=media_type)
         if rating is not None:
             uri += '/{rating}'.format(rating=rating)
@@ -470,7 +602,28 @@ class User(object):
         """Returns stats about the movies, shows, and episodes a user has
         watched and collected
         """
-        data = yield 'users/{user}/stats'.format(user=self.username)
+        data = yield 'users/{user}/stats'.format(user=slugify(self.username))
+        yield data
+
+    @get
+    def get_liked_lists(self, list_type=None, limit=None):
+        """Get items a user likes.
+
+        This will return an array of standard media objects.
+        You can optionally limit the type of results to return.
+
+        list_type possible values are "comments", "lists".
+
+        https://trakt.docs.apiary.io/#reference/users/likes/get-likes
+        """
+        uri = 'users/likes'
+        if list_type is not None:
+            uri += f'/{list_type}'
+
+        if limit is not None:
+            uri += f'?limit={limit}'
+
+        data = yield uri
         yield data
 
     def follow(self):
@@ -483,7 +636,8 @@ class User(object):
 
     def __str__(self):
         """String representation of a :class:`User`"""
-        return '<User>: {}'.format(unicode_safe(self.username))
+        return '<User>: {}'.format(self.username)
+
     __repr__ = __str__
 
 

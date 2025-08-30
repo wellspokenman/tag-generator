@@ -1,3 +1,4 @@
+from email import header
 from bs4 import BeautifulSoup
 import datetime
 import json
@@ -33,7 +34,7 @@ def _getstr(id):
 
 if len(sys.argv) != 2:
     xbmc.sleep(1000)
-    xbmc.log(msg="TAG-GEN: Starting as a service.", level=xbmc.LOGNOTICE)
+    xbmc.log(msg="TAG-GEN: Starting as a service.", level=xbmc.LOGINFO)
 
 
 ###################################################################
@@ -77,28 +78,28 @@ def wipealltags():
         ifcancel()
         json_query = '{"jsonrpc": "2.0", "id": "libMovies", "method": "VideoLibrary.SetMovieDetails", ' \
                      '"params": {"movieid" : replaceid, "tag":[]}}'
-        json_query = unicode(json_query, 'utf-8', errors='ignore')
+        """json_query = str(json_query, 'utf-8', errors='ignore')"""
         xbmcid = (json.dumps(movie.get('xbmcid', '')))
         json_query = re.sub('replaceid', xbmcid, json_query)
         jsonobject = json.loads(xbmc.executeJSONRPC(json_query))
         if len(sys.argv) == 2:
             counter = counter + 1
             percent = (100 * int(counter) / int(len(medialist)))
-            pDialog.update(percent, " ", _getstr(30002) + str(counter) + "/" + str(len(medialist)) + _getstr(30003))
+            pDialog.update(int(percent), _getstr(30002) + str(counter) + "/" + str(len(medialist)) + _getstr(30003))
     return counter
 
 
 def getkodidb():
     """Dump the entire Kodi library to a big list of dicts"""
     if wipeout:
-        pDialog.update(0, _getstr(30004), " ", " ")
+        pDialog.update(0, _getstr(30004))
     elif len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30005), " ", " ")
+        pDialog.update(0, _getstr(30005))
     # json strings -> unicode -> json
     json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"properties" : '
                                      '["title","studio","tag","imdbnumber","year"], "sort": {"order": "ascending", '
                                      '"method": "label", "ignorearticle": true}}, "id": "libMovies"}')
-    json_query = unicode(json_query, 'utf-8', errors='ignore')
+    """json_query = str(json_query, 'utf-8', errors='ignore')"""
     jsonobject = json.loads(json_query)
     medialist = []
     if 'movies' in jsonobject['result']:
@@ -112,7 +113,7 @@ def getkodidb():
 def write_trakt_tags(traktlist, medialist, newtrakttag):
     """Write tags for locally found movies given a Trakt watchlist, local media list and the new tag to write."""
     if len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30006), " ", " ")
+        pDialog.update(0, _getstr(30006))
     moviecount = 0
     counter = 0
     for traktimdbid in traktlist:
@@ -127,7 +128,7 @@ def write_trakt_tags(traktlist, medialist, newtrakttag):
                 moviecount = moviecount + 1
                 percent = (100 * int(counter) / int(len(traktlist)))
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, "", "", _getstr(30007) + str(newtrakttag) + _getstr(30008) + str(moviecount)
+                    pDialog.update(int(percent), _getstr(30007) + str(newtrakttag) + _getstr(30008) + str(moviecount)
                                    + _getstr(30010))
                 debuglog('TAG-GEN: Writing tag "' + newtrakttag + '" to Trakt movie: ' + xbmcname)
                 writetags(xbmcid, newtrakttag, xbmctag[1:-1])
@@ -136,7 +137,7 @@ def write_trakt_tags(traktlist, medialist, newtrakttag):
                 debuglog("TAG-GEN: Not writing tag: " + newtrakttag + " to movie: " + xbmcname + " with existing tag: "
                          + xbmctag)
             if len(sys.argv) == 2:
-                pDialog.update(percent, "", _getstr(30009) + str(counter) + "/" + str(len(traktlist)) + _getstr(30010))
+                pDialog.update(int(percent), _getstr(30009) + str(counter) + "/" + str(len(traktlist)) + _getstr(30010))
     return moviecount
 
 
@@ -183,11 +184,12 @@ def scrapeimdb(imdburl, scrapecount):
     """Scrapes IMDb given a URL and a scrape count (counter for how many times it has run)"""
     internet_test("http://www.imdb.com")
     if len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30011), " ", " ")
+        pDialog.update(0, _getstr(30011))
     ifcancel()
     try:
-        imdbpage = requests.get(imdburl).text
-        imdbuser = re.findall(r'<title>(.+?)</title>', imdbpage)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        imdbpage = requests.get(imdburl, headers=headers).text
+        imdbuser = re.findall(r'<h1.*?<span.*?>(.+?)</span>.*?</h1>', imdbpage)                
         if imdbuser[0] == "Your Watchlist - IMDb":
             imdbuser = str(imdbuser[1])
         else:
@@ -200,7 +202,7 @@ def scrapeimdb(imdburl, scrapecount):
         if len(sys.argv) == 2:
             dialog = xbmcgui.Dialog()
             ok = dialog.ok(_getstr(30000), imdburl + _getstr(30012))
-        xbmc.log(msg="TAG-GEN: " + imdburl + " contains no IMDb IDs. Check URL and retry.", level=xbmc.LOGERROR)
+        xbmc.log(msg="TAG-GEN: " + imdburl + " contains no IMDb IDs. Check URL and retry. Exception follows: " + str(e), level=xbmc.LOGERROR)
         debuglog("TAG-GEN: " + str(e))
         sys.exit(1)
 
@@ -225,7 +227,7 @@ def writeimdbtags(imdblist, medialist, newimdbtag):
                     "TAG-GEN: Writing tag: " + newimdbtag + " to IMDb movie: " + xbmcname + " from " + str(imdbuser))
                 percent = (100 * int(counter) / int(len(imdblist)))
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, "", "", _getstr(30014) + str(newimdbtag) + _getstr(30015) + str(moviecount)
+                    pDialog.update(int(percent), _getstr(30014) + str(newimdbtag) + _getstr(30015) + str(moviecount)
                                    + _getstr(30016))
                 writetags(xbmcid, newimdbtag, xbmctag[1:-1])
             else:
@@ -234,7 +236,7 @@ def writeimdbtags(imdblist, medialist, newimdbtag):
                          " to movie: " + xbmcname + " with existing tag: " +
                          xbmctag + " from " + str(imdbuser))
             if len(sys.argv) == 2:
-                pDialog.update(percent, "", _getstr(30017) + str(counter) + "/" + str(len(imdblist)) + _getstr(30018))
+                pDialog.update(int(percent), _getstr(30017) + str(counter) + "/" + str(len(imdblist)) + _getstr(30018))
     debuglog(str(imdblist))
     return moviecount
 
@@ -243,25 +245,26 @@ def scrapewiki():
     """Scrapes Wikipedia URLs for comedian names given a single url."""
     internet_test("https://en.wikipedia.org")
     if len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30019), " ", " ")
+        pDialog.update(0, _getstr(30019))
     comiclist = []
     for wikiurl in wikiurllist:
         ifcancel()
         try:
-            page = requests.get(wikiurl).text
-            results = (re.findall(
-                r'<li><a href="/wiki/.+?" title=".+?">((?!.*List.*|.*rticle.*|.*omedian.*)\b.+?\b.+?)</a></li>', page))
-            for comic in results:
-                comic = comic.encode("utf-8")
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            page = requests.get(wikiurl, headers=headers).text
+            results = re.findall(r'<li>\s*<a[^>]*href="/wiki/[^"]+"[^>]*title="[^"]+">([^<]+)</a>', page)
+            xbmc.log(msg="TAG-GEN: Scraping Wikipedia URL: " + wikiurl, level=xbmc.LOGINFO)
+            xbmc.log(msg="TAG-GEN: Found these comedians: " + str(results), level=xbmc.LOGINFO)            
+            for comic in results:                
                 ifcancel()
-                debuglog("TAG-GEN: Found comedian: " + comic + " in Wiki URL: " + wikiurl)
+                debuglog("TAG-GEN: Found comedian: " + str(comic) + " in Wiki URL: " + wikiurl)
                 comiclist.append(comic)
             comiclist = sorted(set(comiclist))
         except Exception as e:
             if len(sys.argv) == 2:
                 dialog = xbmcgui.Dialog()
                 ok = dialog.ok(_getstr(30000), wikiurl + _getstr(30020))
-            xbmc.log(msg="TAG-GEN: " + wikiurl + " contains no comedians. Check URL and retry.", level=xbmc.LOGERROR)
+            xbmc.log(msg="TAG-GEN: " + wikiurl + " contains no comedians. Check URL and retry. " + str(e), level=xbmc.LOGERROR)
             debuglog("TAG-GEN: " + str(e))
             sys.exit(1)
     return comiclist
@@ -270,7 +273,7 @@ def scrapewiki():
 def writestanduptags(comiclist, medialist, newwikitag):
     """Write tags for locally found Stand-up movies given list of comedians, local media list and the new tag to write."""
     if len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30021), " ", " ")
+        pDialog.update(0, _getstr(30021))
     comicmatches = 0
     counter = 0
     for comic in comiclist:
@@ -287,9 +290,9 @@ def writestanduptags(comiclist, medialist, newwikitag):
                 xbmctag = xbmctag[1:-1]
                 percent = (100 * int(counter) / int(len(comiclist)))
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, "", "", _getstr(30022) + str(newwikitag) + _getstr(30023)
+                    pDialog.update(int(percent), _getstr(30022) + str(newwikitag) + _getstr(30023)
                                    + str(comicmatches) + _getstr(30024))
-                    pDialog.update(percent, "", _getstr(30025) + str(counter) + "/"
+                    pDialog.update(int(percent), _getstr(30025) + str(counter) + "/"
                                    + str(len(comiclist)) + _getstr(30026))
                     writetags(xbmcid, newwikitag, xbmctag)
             else:
@@ -298,7 +301,7 @@ def writestanduptags(comiclist, medialist, newwikitag):
                          " in feature: " + xbmcname +
                          " with existing tag: " + xbmctag)
                 if len(sys.argv) == 2:
-                    pDialog.update(percent, "", _getstr(30025) + str(counter) + "/" + str(len(comiclist))
+                    pDialog.update(int(percent), _getstr(30025) + str(counter) + "/" + str(len(comiclist))
                                    + _getstr(30026))
     return comicmatches
 
@@ -308,7 +311,7 @@ def write_award_tags(medialist, tag_winners, tag_nominees):
     imdburl = 'https://www.imdb.com'
     internet_test(imdburl)
     if len(sys.argv) == 2:
-        pDialog.update(0, _getstr(30041), " ", " ")
+        pDialog.update(0, _getstr(30041))
     awardsmatches = 0
     counter = 0
     for movie in medialist:
@@ -318,14 +321,15 @@ def write_award_tags(medialist, tag_winners, tag_nominees):
         ifcancel()
         if len(sys.argv) == 2:
             percent = (100 * int(counter) / int(len(medialist)))
-            pDialog.update(percent, _getstr(30041) + " " + str(counter) + "/" + str(len(medialist)))
+            pDialog.update(int(percent), _getstr(30041) + " " + str(counter) + "/" + str(len(medialist)))
         xbmcname = (json.dumps(movie.get('name', '')))
         xbmcid = (json.dumps(movie.get('xbmcid', '')))
         xbmctag = (json.dumps(movie.get('tag', '')))
         imdbid = (json.dumps(movie.get('imdbid', '')))[1:-1]
         while retry_attempts > 0:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
             try:
-                page = requests.get(imdburl + '/title/' + imdbid + '/awards')
+                page = requests.get(imdburl + '/title/' + imdbid + '/awards', headers=headers)
                 page_soup = BeautifulSoup(page.text, "html.parser")
                 page_portion = page_soup.find("body")
                 retry_attempts = 0
@@ -339,30 +343,39 @@ def write_award_tags(medialist, tag_winners, tag_nominees):
                 xbmc.sleep(retry_interval * 1000)
         awards = []
         if page_portion:
-            for header in page_portion.find_all("h3"):
-                if len(header.find_all("a", "event_year")) > 0:
-                    award = header.contents[0].encode('utf-8').strip()
-                    if award == 'Academy Awards, USA':  # only oscars (for the time being)
-                        table = list(header.next_siblings)[1]
-                        award_descriptions = [x.contents[0].strip().encode('utf-8')
-                                              for x in table.find_all("td", "award_description")]
-                        j = 0
-                        for td in table.find_all("td", "title_award_outcome"):
-                            for i in range(int(td['rowspan'])):
-                                award_type = td.b.contents[0].encode('utf-8')
-                                found_award = 'Oscar ' + award_type + ': ' + award_descriptions[j]
-                                # new awards only, and skip 'special achievements', which will be 0 len
-                                # write winners and nominees according to settings
-                                if found_award not in json.loads(xbmctag) and len(award_descriptions[j]) > 0 \
-                                        and ((award_type == "Winner" and tag_winners) or
-                                             (award_type == "Nominee" and tag_nominees)):
-                                    awards.append(found_award)
-                                j += 1
+            academy_element = page_portion.find(string=lambda text: "Academy Awards, USA" in text if text else False)
+
+            if academy_element:                
+                section = academy_element.find_parent("section")                                  
+                oscar_spans = section.find_all("span", string=lambda text: "Oscar" in text if text else False)
+                award_descriptions = []
+                for span in oscar_spans:
+                    parent = span.parent
+                    award_text = parent.get_text(separator=" ", strip=True)
+                    words = award_text.split()
+                    award_year = words[0] if len(words) > 1 else ""
+                    award_result = words[1] if len(words) > 1 else ""
+                    if len(words) >= 2 and award_year.isdigit() and len(award_year) == 4:                        
+                        next_ul = parent.find_next_sibling("ul")
+                        if next_ul:
+                            category_span = next_ul.find("span", class_="awardCategoryName")
+                            if category_span:
+                                award_category = category_span.get_text(strip=True)
+                                award_descriptions.append({"year": award_year, "result": award_result, "category": award_category})                                
+                j = 0         
+                for award_dict in award_descriptions:                    
+                    found_award = f'Oscar {award_dict['result']}: {award_dict['category']}'
+                    debuglog(f"TAG-GEN: {xbmcname} awarded {found_award}")
+                    # new awards only, and skip 'special achievements', which will be 0 len
+                    # write winners and nominees according to settings
+                    if found_award not in json.loads(xbmctag) and (award_dict["result"] == "Winner" and tag_winners) or (award_dict["result"] == "Nominee" and tag_nominees):
+                        awards.append(found_award)
+                    j += 1
         if len(awards) > 0:
             debuglog("TAG-GEN: Found the following awards for " + xbmcname + str(awards))
             awardsmatches += 1
             if len(sys.argv) == 2:
-                pDialog.update(percent, "", _getstr(30042) + str(xbmcname))
+                pDialog.update(int(percent), _getstr(30042) + str(xbmcname))
             writetags(xbmcid, awards, xbmctag)
     return awardsmatches
 
@@ -373,7 +386,7 @@ def write_award_tags(medialist, tag_winners, tag_nominees):
 
 
 # These are the URLs that we will be searching for comedians
-wikiurllist = ["https://en.wikipedia.org/wiki/List_of_British_stand-up_comedians",
+wikiurllist = ["https://en.wikipedia.org/wiki/List_of_British_comedians",
                "https://en.wikipedia.org/wiki/List_of_stand-up_comedians",
                "https://en.wikipedia.org/wiki/List_of_Australian_stand-up_comedians",
                "https://en.wikipedia.org/wiki/List_of_Canadian_stand-up_comedians",
@@ -408,7 +421,7 @@ while not monitor.abortRequested():
     trakt_user_start = 32160
     c_trakt_list = __settings__.getSetting(str(trakt_list_start))
     c_trakt_tag = __settings__.getSetting(str(trakt_tag_start))
-    c_trakt_user = __settings__.getSetting(str(trakt_user_start))
+    c_trakt_user = __settings__.getSetting(str(trakt_user_start))    
     trakt.core.APPLICATION_ID = '12265'
     trakt_client_id = '8bc9b1371d9594b451c863bea2c95aa96ac5e5bf9ecee274daa23c0790386afe'
     trakt_client_secret = '6087cbfb47b8f0cdc1c0fc491ec52524c9d23bf37a8480a8c2827ea91312cbad'
@@ -463,7 +476,7 @@ while not monitor.abortRequested():
                     pDialog = xbmcgui.DialogProgress()
                     pDialog.create("Tag Generator", _getstr(30030))
                     wipedcount = wipealltags()
-                    xbmc.log(msg="TAG-GEN: Finished wiping tags.", level=xbmc.LOGNOTICE)
+                    xbmc.log(msg="TAG-GEN: Finished wiping tags.", level=xbmc.LOGINFO)
                     sys.exit(0)
                 else:
                     debuglog("TAG-GEN: Manual tag deletion arg received, but not confirmed so exiting.")
@@ -474,7 +487,7 @@ while not monitor.abortRequested():
         elif sys.argv[1] == "standup":
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg="TAG-GEN: Starting stand-up tag writing.", level=xbmc.LOGNOTICE)
+            xbmc.log(msg="TAG-GEN: Starting stand-up tag writing.", level=xbmc.LOGINFO)
             medialist = getkodidb()
             newwikitag = c_standuptag
             comedians = scrapewiki()
@@ -486,7 +499,7 @@ while not monitor.abortRequested():
         elif sys.argv[1] == "imdb":
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGNOTICE)
+            xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGINFO)
             medialist = getkodidb()
             scrapecount = 0
             for imdburl in imdburllist:
@@ -505,7 +518,7 @@ while not monitor.abortRequested():
             d = dialog.input(_getstr(30924))
             if d:
                 try:
-                    trakt_token = trakt.init(pin=d, client_id=trakt_client_id, client_secret=trakt_client_secret)
+                    trakt_token = trakt.init(pin=d, client_id=trakt_client_id, client_secret=trakt_client_secret)                                        
                     __settings__.setSetting("32031", trakt_token)
                     sys.exit(0)
                 except Exception as e:
@@ -524,7 +537,7 @@ while not monitor.abortRequested():
                 sys.exit(1)
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg="TAG-GEN: Starting Trakt writing.", level=xbmc.LOGNOTICE)
+            xbmc.log(msg="TAG-GEN: Starting Trakt writing.", level=xbmc.LOGINFO)
             medialist = getkodidb()
             i = 0
             for this_trakt_list in trakt_lists:
@@ -548,7 +561,7 @@ while not monitor.abortRequested():
                 sys.exit(1)
             pDialog = xbmcgui.DialogProgress()
             ret = pDialog.create("Tag Generator", _getstr(30027))
-            xbmc.log(msg="TAG-GEN: Starting awards tag writing.", level=xbmc.LOGNOTICE)
+            xbmc.log(msg="TAG-GEN: Starting awards tag writing.", level=xbmc.LOGINFO)
             medialist = getkodidb()
             awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
             dialog = xbmcgui.Dialog()
@@ -566,7 +579,7 @@ while not monitor.abortRequested():
     if c_useimdb and not wipeout:
         if c_notify:
             notify(_getstr(30036))
-        xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGNOTICE)
+        xbmc.log(msg="TAG-GEN: Starting IMDb tag writing.", level=xbmc.LOGINFO)
         scrapecount = 0
         moviecount = 0
         for imdburl in imdburllist:
@@ -582,7 +595,7 @@ while not monitor.abortRequested():
     if c_usetrakt and not wipeout and (len(c_trakt_token) == 64):
         if c_notify:
             notify(_getstr(30037))
-        xbmc.log(msg="TAG-GEN: Starting Trakt tag writing.", level=xbmc.LOGNOTICE)
+        xbmc.log(msg="TAG-GEN: Starting Trakt tag writing.", level=xbmc.LOGINFO)
         i = 0
         for this_trakt_list in trakt_lists:
             this_trakt_tag = trakt_tags[i]
@@ -601,7 +614,7 @@ while not monitor.abortRequested():
         if c_notify:
             notify(_getstr(30038))
         newwikitag = c_standuptag
-        xbmc.log(msg="TAG-GEN: Starting stand-up tag writing.", level=xbmc.LOGNOTICE)
+        xbmc.log(msg="TAG-GEN: Starting stand-up tag writing.", level=xbmc.LOGINFO)
         comedians = scrapewiki()
         comiccount = writestanduptags(comedians, medialist, newwikitag)
     else:
@@ -612,7 +625,7 @@ while not monitor.abortRequested():
         if c_notify:
             notify(_getstr(30039))
         medialist = getkodidb()
-        xbmc.log("TAG-GEN: Starting awards tag writing.", level=xbmc.LOGNOTICE)
+        xbmc.log("TAG-GEN: Starting awards tag writing.", level=xbmc.LOGINFO)
         awardscount = write_award_tags(medialist, c_oscarwinners, c_oscarnominees)
     else:
         debuglog("TAG-GEN: Skipping awards tag writing.")
@@ -633,11 +646,11 @@ while not monitor.abortRequested():
         debuglog("TAG-GEN: Wipeout arg received, exiting after single execution.")
         sys.exit(0)
     else:
-        xbmc.log(msg="TAG-GEN: Sleeping for " + str(c_refresh) + " hours", level=xbmc.LOGNOTICE)
+        xbmc.log(msg="TAG-GEN: Sleeping for " + str(c_refresh) + " hours", level=xbmc.LOGINFO)
         while not monitor.abortRequested():
             if (datetime.datetime.now() - start_time).total_seconds() < service_interval:
                 if monitor.waitForAbort(nap):
-                    xbmc.log("TAG-GEN: Abort request received, exiting.", level=xbmc.LOGNOTICE)
+                    xbmc.log("TAG-GEN: Abort request received, exiting.", level=xbmc.LOGINFO)
                     sys.exit(0)
             else:
                 start_time = datetime.datetime.now()

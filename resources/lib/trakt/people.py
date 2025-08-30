@@ -1,31 +1,36 @@
 # -*- coding: utf-8 -*-
 """Interfaces to all of the People objects offered by the Trakt.tv API"""
+
 from trakt.core import get
+from trakt.mixins import IdsMixin
 from trakt.sync import search
-from trakt.utils import slugify, extract_ids
+from trakt.utils import slugify
 
 __author__ = 'Jon Nappi'
 __all__ = ['Person', 'ActingCredit', 'CrewCredit', 'Credits', 'MovieCredits',
            'TVCredits']
 
 
-class Person(object):
+class Person(IdsMixin):
     """A Class representing a trakt.tv Person such as an Actor or Director"""
+
     def __init__(self, name, slug=None, **kwargs):
-        super(Person, self).__init__()
+        super().__init__()
         self.name = name
-        self.biography = self.birthplace = self.tmdb_id = self.birthday = None
+        self.biography = self.birthplace = self.birthday = None
+        self.death = self.homepage = None
         self.job = self.character = self._images = self._movie_credits = None
         self._tv_credits = None
         self.slug = slug or slugify(self.name)
+        self.tmdb_id = None  # @deprecated: unused
 
         if len(kwargs) > 0:
             self._build(kwargs)
         else:
             self._get()
 
-    @classmethod
-    def search(cls, name, year=None):
+    @staticmethod
+    def search(name, year=None):
         """Perform a search for an episode with a title matching *title*
 
         :param name: The name of the person to search for
@@ -59,7 +64,6 @@ class Person(object):
         self._build(data)
 
     def _build(self, data):
-        extract_ids(data)
         for key, val in data.items():
             try:
                 setattr(self, key, val)
@@ -91,7 +95,7 @@ class Person(object):
     @get
     def tv_credits(self):
         """Return a collection of TV Show credits that this :class:`Person` was
-        a cast or crew memeber on
+        a cast or crew member on
         """
         if self._tv_credits is None:
             data = yield self.ext_tv_credits
@@ -101,13 +105,15 @@ class Person(object):
     def __str__(self):
         """String representation of a :class:`Person`"""
         return '<Person>: {0}'.format(self.name)
+
     __repr__ = __str__
 
 
-class ActingCredit(object):
+class ActingCredit:
     """An individual credit for a :class:`Person` who played a character in a
     Movie or TV Show
     """
+
     def __init__(self, character, media):
         self.character = character
         self.media = media
@@ -122,10 +128,11 @@ class ActingCredit(object):
     __repr__ = __str__
 
 
-class CrewCredit(object):
+class CrewCredit:
     """An individual crew credit for a :class:`Person` who had an off-screen
     job on a Movie or a TV Show
     """
+
     def __init__(self, job, media):
         self.job = job
         self.media = media
@@ -140,10 +147,11 @@ class CrewCredit(object):
     __repr__ = __str__
 
 
-class Credits(object):
+class Credits:
     """A base type representing a :class:`Person`'s credits for Movies or TV
     Shows
     """
+
     MEDIA_KEY = None
 
     def __init__(self, **kwargs):
@@ -188,19 +196,23 @@ class Credits(object):
 
 class MovieCredits(Credits):
     """A collection of cast and crew credits for a Movie"""
+
     MEDIA_KEY = 'movie'
 
     def _extract_media(self, media):
         from trakt.movies import Movie
+
         data = media.get(self.MEDIA_KEY)
         return Movie(**data)
 
 
 class TVCredits(Credits):
     """A collection of cast and crew credits for a TV Show"""
+
     MEDIA_KEY = 'show'
 
     def _extract_media(self, media):
         from trakt.tv import TVShow
+
         data = media.get(self.MEDIA_KEY)
         return TVShow(**data)

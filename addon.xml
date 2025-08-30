@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.tag-generator"
        name="Tag Generator"
-       version="0.9.0"
+       version="0.9.1"
        provider-name="wellspokenman">
   <requires>
     <import addon="xbmc.python" version="3.0.1"/>

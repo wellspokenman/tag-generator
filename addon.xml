@@ -18,7 +18,7 @@
 	<forum>https://forum.kodi.tv/showthread.php?tid=140494</forum>
 	<source>https://github.com/wellspokenman/tag-generator</source>
     <news>
-     v0.9 (August 30th, 2025)
+     v0.9.1 (August 30th, 2025)
       - Kodi 21 Support
       - Fixed IMDb parsing of Oscars        
       - Fixed Wikipedia scraping for stand-up comedians

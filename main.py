@@ -253,8 +253,6 @@ def scrapewiki():
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
             page = requests.get(wikiurl, headers=headers).text
             results = re.findall(r'<li>\s*<a[^>]*href="/wiki/[^"]+"[^>]*title="[^"]+">([^<]+)</a>', page)
-            xbmc.log(msg="TAG-GEN: Scraping Wikipedia URL: " + wikiurl, level=xbmc.LOGINFO)
-            xbmc.log(msg="TAG-GEN: Found these comedians: " + str(results), level=xbmc.LOGINFO)            
             for comic in results:                
                 ifcancel()
                 debuglog("TAG-GEN: Found comedian: " + str(comic) + " in Wiki URL: " + wikiurl)
@@ -285,8 +283,7 @@ def writestanduptags(comiclist, medialist, newwikitag):
             xbmctag = (json.dumps(movie.get('tag', '')))
             if (comic in xbmcname) and (newwikitag not in xbmctag):
                 comicmatches = comicmatches + 1
-                debuglog("TAG-GEN: Match found for comedian: " + comic + " in feature: " + xbmcname
-                         + " from Wikipedia comedians.")
+                debuglog("TAG-GEN: Match found for comedian: " + comic + " in feature: " + xbmcname + " from Wikipedia comedians.")
                 xbmctag = xbmctag[1:-1]
                 percent = (100 * int(counter) / int(len(comiclist)))
                 if len(sys.argv) == 2:
